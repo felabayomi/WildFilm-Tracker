@@ -279,6 +279,13 @@ export default function ProfileScreen() {
         ) : null}
 
         <View style={styles.menuSection}>
+          <ThemedText style={styles.menuTitle}>Filmmakers</ThemedText>
+          <View style={styles.menuContainer}>
+            <MenuButton icon="video" label="Submit Your Film" onPress={() => profileNavigation.navigate("SubmitFilm")} />
+          </View>
+        </View>
+
+        <View style={styles.menuSection}>
           <ThemedText style={styles.menuTitle}>Settings</ThemedText>
           <View style={styles.menuContainer}>
             <MenuButton icon="sliders" label="Preferences" onPress={() => setIsPreferencesModalVisible(true)} />
