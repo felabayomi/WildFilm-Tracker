@@ -19,7 +19,9 @@ import * as ImagePicker from "expo-image-picker";
 import * as Haptics from "expo-haptics";
 
 import { useTheme } from "@/hooks/useTheme";
+import { useThemeContext } from "@/contexts/ThemeContext";
 import { useFilms } from "@/hooks/useFilmData";
+import { ProfileStackParamList } from "@/navigation/ProfileStackNavigator";
 import { Colors, Spacing, BorderRadius } from "@/constants/theme";
 import { ThemedText } from "@/components/ThemedText";
 import { SectionHeader } from "@/components/SectionHeader";
@@ -41,8 +43,11 @@ export default function ProfileScreen() {
   const headerHeight = useHeaderHeight();
   const tabBarHeight = useBottomTabBarHeight();
   const { theme } = useTheme();
+  const { isDarkMode, setDarkMode } = useThemeContext();
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const profileNavigation = 
+    useNavigation<NativeStackNavigationProp<ProfileStackParamList>>();
 
   const { watchedFilms, watchlistFilms, userFilmData, refetch } = useFilms();
 
@@ -54,8 +59,6 @@ export default function ProfileScreen() {
   const [isPreferencesModalVisible, setIsPreferencesModalVisible] = useState(false);
   const [editName, setEditName] = useState("");
   const [editBio, setEditBio] = useState("");
-  const [isDarkMode, setIsDarkMode] = useState(true);
-  const [notificationsEnabled, setNotificationsEnabled] = useState(false);
 
   useEffect(() => {
     loadProfile();
@@ -279,7 +282,7 @@ export default function ProfileScreen() {
           <ThemedText style={styles.menuTitle}>Settings</ThemedText>
           <View style={styles.menuContainer}>
             <MenuButton icon="sliders" label="Preferences" onPress={() => setIsPreferencesModalVisible(true)} />
-            <MenuButton icon="bell" label="Notifications" />
+            <MenuButton icon="bell" label="Notifications" onPress={() => profileNavigation.navigate("Notifications")} />
             <MenuButton icon="shield" label="Privacy" />
             <MenuButton icon="help-circle" label="Help & Support" />
             <MenuButton icon="info" label="About WildFilms" />
@@ -378,22 +381,9 @@ export default function ProfileScreen() {
               </View>
               <Pressable
                 style={[styles.toggle, isDarkMode && styles.toggleActive]}
-                onPress={() => setIsDarkMode(!isDarkMode)}
+                onPress={() => setDarkMode(!isDarkMode)}
               >
                 <View style={[styles.toggleKnob, isDarkMode && styles.toggleKnobActive]} />
-              </Pressable>
-            </View>
-
-            <View style={styles.preferenceItem}>
-              <View style={styles.preferenceInfo}>
-                <Feather name="bell" size={20} color={Colors.dark.accent} />
-                <ThemedText style={styles.preferenceLabel}>Notifications</ThemedText>
-              </View>
-              <Pressable
-                style={[styles.toggle, notificationsEnabled && styles.toggleActive]}
-                onPress={() => setNotificationsEnabled(!notificationsEnabled)}
-              >
-                <View style={[styles.toggleKnob, notificationsEnabled && styles.toggleKnobActive]} />
               </Pressable>
             </View>
 

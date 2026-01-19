@@ -15,7 +15,42 @@ const STORAGE_KEYS = {
   FAVORITE_SOURCES: "favorite_sources",
   WATCHED_FILMS_DATA: "watched_films_data",
   USER_PROFILE: "user_profile",
+  USER_PREFERENCES: "user_preferences",
 };
+
+export interface UserPreferences {
+  isDarkMode: boolean;
+  notificationsEnabled: boolean;
+  newFilmAlerts: boolean;
+  watchlistReminders: boolean;
+}
+
+const DEFAULT_PREFERENCES: UserPreferences = {
+  isDarkMode: true,
+  notificationsEnabled: false,
+  newFilmAlerts: true,
+  watchlistReminders: true,
+};
+
+export async function getUserPreferences(): Promise<UserPreferences> {
+  try {
+    const data = await AsyncStorage.getItem(STORAGE_KEYS.USER_PREFERENCES);
+    return data ? { ...DEFAULT_PREFERENCES, ...JSON.parse(data) } : DEFAULT_PREFERENCES;
+  } catch (error) {
+    console.error("Error getting user preferences:", error);
+    return DEFAULT_PREFERENCES;
+  }
+}
+
+export async function saveUserPreferences(preferences: Partial<UserPreferences>): Promise<void> {
+  try {
+    const current = await getUserPreferences();
+    const updated = { ...current, ...preferences };
+    await AsyncStorage.setItem(STORAGE_KEYS.USER_PREFERENCES, JSON.stringify(updated));
+  } catch (error) {
+    console.error("Error saving user preferences:", error);
+  }
+}
 
 export interface UserProfile {
   name: string;
