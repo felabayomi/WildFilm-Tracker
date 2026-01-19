@@ -26,6 +26,89 @@ const WILDLIFE_KEYWORDS = [
 // Wildlife terms for text-based filtering
 const WILDLIFE_TERMS = ['animal', 'wildlife', 'ocean', 'sea', 'marine', 'jungle', 'rainforest', 'safari', 'polar', 'arctic', 'elephant', 'lion', 'tiger', 'whale', 'dolphin', 'bird', 'fish', 'shark', 'bear', 'wolf', 'gorilla', 'chimpanzee', 'octopus', 'coral', 'reef', 'forest', 'nature', 'planet earth', 'conservation', 'endangered', 'species', 'predator', 'prey', 'ecosystem', 'serengeti', 'amazon', 'african', 'penguin', 'monkey', 'ape'];
 
+// Valid regions for filtering
+const VALID_REGIONS = [
+  "North America",
+  "South America", 
+  "Canada",
+  "Africa",
+  "Antarctica",
+  "Arctic",
+  "Asia",
+  "Australia",
+  "Europe",
+  "Pacific Ocean",
+  "Atlantic Ocean",
+  "Indian Ocean",
+];
+
+// AI-powered region detection from film details
+async function detectRegionsWithAI(title: string, synopsis: string): Promise<string[]> {
+  try {
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [
+        {
+          role: "system",
+          content: `You are a wildlife documentary expert. Based on the film title and synopsis, determine which geographic regions the documentary is about.
+
+ONLY return regions from this exact list (return the exact spelling):
+- North America (includes USA, Mexico, Central America)
+- South America (includes Brazil, Peru, Ecuador, Argentina, etc.)
+- Canada
+- Africa
+- Antarctica
+- Arctic (includes polar regions, Greenland, Svalbard)
+- Asia (includes China, Japan, India, Southeast Asia, Russia)
+- Australia (includes New Zealand, Papua New Guinea)
+- Europe
+- Pacific Ocean (includes Hawaii, Polynesia, Pacific islands)
+- Atlantic Ocean (includes Caribbean)
+- Indian Ocean (includes Maldives, Seychelles)
+
+Analyze the title and synopsis for:
+- Mentioned locations, countries, or regions
+- Wildlife species that are native to specific regions (e.g., penguins=Antarctica, lions=Africa, bears=North America/Canada, pandas=Asia)
+- Ecosystems that indicate regions (e.g., Amazon=South America, Serengeti=Africa, Great Barrier Reef=Australia)
+
+Return a JSON array of matching regions. If you can't determine any regions, return an empty array.
+Example: ["Africa", "Asia"]`
+        },
+        {
+          role: "user",
+          content: `Title: ${title}\n\nSynopsis: ${synopsis}`
+        }
+      ],
+      response_format: { type: "json_object" },
+      max_completion_tokens: 200,
+    });
+
+    const content = response.choices[0]?.message?.content || "{}";
+    const parsed = JSON.parse(content);
+    const regions = parsed.regions || parsed.locations || [];
+    
+    // Filter to only valid regions
+    return regions.filter((r: string) => VALID_REGIONS.includes(r));
+  } catch (error) {
+    console.error("AI region detection error:", error);
+    return [];
+  }
+}
+
+// Cache for AI region detection to avoid repeated API calls
+const regionCache = new Map<string, string[]>();
+
+async function getRegionsForFilm(id: string, title: string, synopsis: string): Promise<string[]> {
+  const cacheKey = `${id}`;
+  if (regionCache.has(cacheKey)) {
+    return regionCache.get(cacheKey)!;
+  }
+  
+  const regions = await detectRegionsWithAI(title, synopsis);
+  regionCache.set(cacheKey, regions);
+  return regions;
+}
+
 interface TMDBMovie {
   id: number;
   title: string;
@@ -87,51 +170,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return WILDLIFE_TERMS.some(term => text.includes(term));
       });
       
-      // Region keywords for inferring locations from overview
-      const regionKeywords: Record<string, string[]> = {
-        "Africa": ["africa", "african", "serengeti", "savanna", "sahara", "kenya", "tanzania", "botswana", "namibia", "zimbabwe", "south africa", "madagascar"],
-        "Antarctica": ["antarctica", "antarctic", "penguin", "south pole"],
-        "Arctic": ["arctic", "polar bear", "north pole", "greenland", "svalbard"],
-        "Asia": ["asia", "asian", "china", "japan", "india", "thailand", "indonesia", "borneo", "sumatra", "himalaya"],
-        "Australia": ["australia", "australian", "outback", "great barrier reef", "new zealand", "tasmania"],
-        "North America": ["north america", "yellowstone", "yosemite", "california", "florida", "everglades", "rockies", "appalachian", "american"],
-        "South America": ["south america", "amazon", "rainforest", "brazil", "peru", "ecuador", "galapagos", "andes", "patagonia"],
-        "Canada": ["canada", "canadian", "british columbia", "yukon", "arctic canada", "hudson bay"],
-        "Pacific Ocean": ["pacific", "coral reef", "polynesia", "hawaii", "fiji", "samoa"],
-        "Atlantic Ocean": ["atlantic", "caribbean", "bermuda", "azores"],
-        "Indian Ocean": ["indian ocean", "maldives", "seychelles", "mauritius"],
-      };
-      
-      const films = filteredResults.map((movie) => {
-        const overview = (movie.overview || "").toLowerCase();
-        const locations: string[] = [];
-        
-        for (const [region, keywords] of Object.entries(regionKeywords)) {
-          if (keywords.some(kw => overview.includes(kw))) {
-            locations.push(region);
-          }
-        }
-        
-        return {
-          id: `tmdb-${movie.id}`,
-          tmdbId: movie.id,
-          title: movie.title,
-          year: movie.release_date ? parseInt(movie.release_date.split("-")[0]) : 0,
-          synopsis: movie.overview,
-          posterUrl: movie.poster_path 
-            ? `https://image.tmdb.org/t/p/w500${movie.poster_path}`
-            : null,
-          backdropUrl: movie.backdrop_path
-            ? `https://image.tmdb.org/t/p/w1280${movie.backdrop_path}`
-            : null,
-          rating: Math.round(movie.vote_average * 10) / 10,
-          voteCount: movie.vote_count,
-          locations: locations,
-        };
-      });
+      // Use AI to detect regions for each film (with caching)
+      const filmsWithRegions = await Promise.all(
+        filteredResults.map(async (movie) => {
+          const locations = await getRegionsForFilm(
+            `tmdb-${movie.id}`,
+            movie.title,
+            movie.overview || ""
+          );
+          
+          return {
+            id: `tmdb-${movie.id}`,
+            tmdbId: movie.id,
+            title: movie.title,
+            year: movie.release_date ? parseInt(movie.release_date.split("-")[0]) : 0,
+            synopsis: movie.overview,
+            posterUrl: movie.poster_path 
+              ? `https://image.tmdb.org/t/p/w500${movie.poster_path}`
+              : null,
+            backdropUrl: movie.backdrop_path
+              ? `https://image.tmdb.org/t/p/w1280${movie.backdrop_path}`
+              : null,
+            rating: Math.round(movie.vote_average * 10) / 10,
+            voteCount: movie.vote_count,
+            locations: locations,
+          };
+        })
+      );
 
       res.json({
-        films,
+        films: filmsWithRegions,
         page: data.page,
         totalPages: data.total_pages,
         totalResults: filteredResults.length,
@@ -173,44 +241,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return WILDLIFE_TERMS.some(term => text.includes(term));
       });
 
-      // Region keywords for inferring locations from overview
-      const regionKeywords: Record<string, string[]> = {
-        "Africa": ["africa", "african", "serengeti", "savanna", "sahara", "kenya", "tanzania", "botswana", "namibia", "zimbabwe", "south africa", "madagascar"],
-        "Antarctica": ["antarctica", "antarctic", "penguin", "south pole"],
-        "Arctic": ["arctic", "polar bear", "north pole", "greenland", "svalbard"],
-        "Asia": ["asia", "asian", "china", "japan", "india", "thailand", "indonesia", "borneo", "sumatra", "himalaya"],
-        "Australia": ["australia", "australian", "outback", "great barrier reef", "new zealand", "tasmania"],
-        "North America": ["north america", "yellowstone", "yosemite", "california", "florida", "everglades", "rockies", "appalachian", "american"],
-        "South America": ["south america", "amazon", "rainforest", "brazil", "peru", "ecuador", "galapagos", "andes", "patagonia"],
-        "Canada": ["canada", "canadian", "british columbia", "yukon", "arctic canada", "hudson bay"],
-        "Pacific Ocean": ["pacific", "coral reef", "polynesia", "hawaii", "fiji", "samoa"],
-        "Atlantic Ocean": ["atlantic", "caribbean", "bermuda", "azores"],
-        "Indian Ocean": ["indian ocean", "maldives", "seychelles", "mauritius"],
-      };
-      
-      const films = wildlifeDocumentaries.map((movie) => {
-        const overview = (movie.overview || "").toLowerCase();
-        const locations: string[] = [];
-        
-        for (const [region, keywords] of Object.entries(regionKeywords)) {
-          if (keywords.some(kw => overview.includes(kw))) {
-            locations.push(region);
-          }
-        }
-        
-        return {
-          id: `tmdb-${movie.id}`,
-          tmdbId: movie.id,
-          title: movie.title,
-          year: movie.release_date ? parseInt(movie.release_date.split("-")[0]) : 0,
-          synopsis: movie.overview,
-          posterUrl: movie.poster_path 
-            ? `https://image.tmdb.org/t/p/w500${movie.poster_path}`
-            : null,
-          rating: Math.round(movie.vote_average * 10) / 10,
-          locations: locations,
-        };
-      });
+      // Use AI to detect regions for each film (with caching)
+      const films = await Promise.all(
+        wildlifeDocumentaries.map(async (movie) => {
+          const locations = await getRegionsForFilm(
+            `tmdb-${movie.id}`,
+            movie.title,
+            movie.overview || ""
+          );
+          
+          return {
+            id: `tmdb-${movie.id}`,
+            tmdbId: movie.id,
+            title: movie.title,
+            year: movie.release_date ? parseInt(movie.release_date.split("-")[0]) : 0,
+            synopsis: movie.overview,
+            posterUrl: movie.poster_path 
+              ? `https://image.tmdb.org/t/p/w500${movie.poster_path}`
+              : null,
+            rating: Math.round(movie.vote_average * 10) / 10,
+            locations: locations,
+          };
+        })
+      );
 
       res.json({ films });
     } catch (error) {
@@ -447,120 +500,12 @@ Return ONLY the summary text, nothing else.`
       
       const movie = await response.json();
       
-      // Map production countries to regions
-      const countryToRegion: Record<string, string> = {
-        "United States of America": "North America",
-        "United States": "North America",
-        "USA": "North America",
-        "Mexico": "North America",
-        "Canada": "Canada",
-        "Brazil": "South America",
-        "Argentina": "South America",
-        "Chile": "South America",
-        "Peru": "South America",
-        "Colombia": "South America",
-        "Ecuador": "South America",
-        "Venezuela": "South America",
-        "Bolivia": "South America",
-        "Costa Rica": "North America",
-        "Panama": "North America",
-        "United Kingdom": "Europe",
-        "France": "Europe",
-        "Germany": "Europe",
-        "Spain": "Europe",
-        "Italy": "Europe",
-        "Netherlands": "Europe",
-        "Norway": "Europe",
-        "Sweden": "Europe",
-        "Denmark": "Europe",
-        "Finland": "Europe",
-        "Iceland": "Europe",
-        "Ireland": "Europe",
-        "Switzerland": "Europe",
-        "Austria": "Europe",
-        "Belgium": "Europe",
-        "Portugal": "Europe",
-        "Poland": "Europe",
-        "Czech Republic": "Europe",
-        "South Africa": "Africa",
-        "Kenya": "Africa",
-        "Tanzania": "Africa",
-        "Botswana": "Africa",
-        "Namibia": "Africa",
-        "Zimbabwe": "Africa",
-        "Uganda": "Africa",
-        "Rwanda": "Africa",
-        "Ethiopia": "Africa",
-        "Madagascar": "Africa",
-        "Morocco": "Africa",
-        "Egypt": "Africa",
-        "Nigeria": "Africa",
-        "Ghana": "Africa",
-        "Senegal": "Africa",
-        "China": "Asia",
-        "Japan": "Asia",
-        "India": "Asia",
-        "South Korea": "Asia",
-        "Thailand": "Asia",
-        "Vietnam": "Asia",
-        "Indonesia": "Asia",
-        "Malaysia": "Asia",
-        "Philippines": "Asia",
-        "Singapore": "Asia",
-        "Nepal": "Asia",
-        "Sri Lanka": "Asia",
-        "Mongolia": "Asia",
-        "Taiwan": "Asia",
-        "Hong Kong": "Asia",
-        "Russia": "Asia",
-        "Australia": "Australia",
-        "New Zealand": "Australia",
-        "Papua New Guinea": "Australia",
-        "Fiji": "Pacific Ocean",
-        "Samoa": "Pacific Ocean",
-        "Tonga": "Pacific Ocean",
-        "Vanuatu": "Pacific Ocean",
-        "Solomon Islands": "Pacific Ocean",
-        "Greenland": "Arctic",
-        "Svalbard": "Arctic",
-      };
-      
-      // Extract regions from production countries
-      const locations: string[] = [];
-      if (movie.production_countries && Array.isArray(movie.production_countries)) {
-        for (const country of movie.production_countries) {
-          const region = countryToRegion[country.name];
-          if (region && !locations.includes(region)) {
-            locations.push(region);
-          }
-          // Also add the country name for more specific filtering
-          if (country.name && !locations.includes(country.name)) {
-            locations.push(country.name);
-          }
-        }
-      }
-      
-      // Try to infer regions from the overview text
-      const overview = (movie.overview || "").toLowerCase();
-      const regionKeywords: Record<string, string[]> = {
-        "Africa": ["africa", "african", "serengeti", "savanna", "sahara", "kenya", "tanzania", "botswana", "namibia", "zimbabwe", "south africa", "madagascar"],
-        "Antarctica": ["antarctica", "antarctic", "penguin", "south pole"],
-        "Arctic": ["arctic", "polar bear", "north pole", "alaska", "greenland", "svalbard"],
-        "Asia": ["asia", "asian", "china", "japan", "india", "thailand", "indonesia", "borneo", "sumatra", "himalaya"],
-        "Australia": ["australia", "australian", "outback", "great barrier reef", "new zealand", "tasmania"],
-        "North America": ["north america", "yellowstone", "yosemite", "alaska", "california", "florida", "everglades", "rockies", "appalachian"],
-        "South America": ["south america", "amazon", "rainforest", "brazil", "peru", "ecuador", "galapagos", "andes", "patagonia"],
-        "Canada": ["canada", "canadian", "british columbia", "yukon", "arctic canada", "hudson bay"],
-        "Pacific Ocean": ["pacific", "coral reef", "polynesia", "hawaii", "fiji", "samoa"],
-        "Atlantic Ocean": ["atlantic", "caribbean", "bermuda", "azores"],
-        "Indian Ocean": ["indian ocean", "maldives", "seychelles", "mauritius"],
-      };
-      
-      for (const [region, keywords] of Object.entries(regionKeywords)) {
-        if (keywords.some(kw => overview.includes(kw)) && !locations.includes(region)) {
-          locations.push(region);
-        }
-      }
+      // Use AI to detect regions
+      const locations = await getRegionsForFilm(
+        `tmdb-${movie.id}`,
+        movie.title,
+        movie.overview || ""
+      );
       
       const film = {
         id: `tmdb-${movie.id}`,
