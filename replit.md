@@ -99,6 +99,9 @@ The backend provides TMDB integration for wildlife films:
 - **Privacy Screen**: Privacy policy, terms of service, and data usage documentation
 - **Help & Support Screen**: App usage guide, FAQ section, and contact email (wildlifefilm@hotmail.com)
 - **About WildFilms Screen**: App info, version, features highlight, TMDB attribution, and support contact
+- **Film Trailers**: Watch trailers and videos directly from film details via YouTube integration
+- **Personal Notes**: Add and edit private notes/reviews on any film, stored locally per film
+- **Favorite Species**: Follow species by tapping chips - favorites persist across app sessions
 
 ## Production Deployment
 
