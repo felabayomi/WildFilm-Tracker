@@ -309,11 +309,7 @@ export default function ProfileScreen() {
               />
             </View>
 
-            <Button
-              onPress={handleSaveProfile}
-              style={styles.saveButton}
-              testID="button-save-profile"
-            >
+            <Button onPress={handleSaveProfile} style={styles.saveButton}>
               Save Changes
             </Button>
           </View>
