@@ -186,23 +186,27 @@ export default function FilmDetailsScreen() {
             <ThemedText style={styles.synopsis}>{film.synopsis}</ThemedText>
           </View>
 
-          <View style={styles.section}>
-            <ThemedText style={styles.sectionTitle}>Featured Species</ThemedText>
-            <View style={styles.chipContainer}>
-              {film.species.map((species) => (
-                <SpeciesChip key={species} species={species} />
-              ))}
+          {film.species.length > 0 ? (
+            <View style={styles.section}>
+              <ThemedText style={styles.sectionTitle}>Featured Species</ThemedText>
+              <View style={styles.chipContainer}>
+                {film.species.map((species) => (
+                  <SpeciesChip key={species} species={species} />
+                ))}
+              </View>
             </View>
-          </View>
+          ) : null}
 
-          <View style={styles.section}>
-            <ThemedText style={styles.sectionTitle}>Filming Locations</ThemedText>
-            <View style={styles.chipContainer}>
-              {film.locations.map((location) => (
-                <LocationChip key={location} location={location} />
-              ))}
+          {film.locations.length > 0 ? (
+            <View style={styles.section}>
+              <ThemedText style={styles.sectionTitle}>Filming Locations</ThemedText>
+              <View style={styles.chipContainer}>
+                {film.locations.map((location) => (
+                  <LocationChip key={location} location={location} />
+                ))}
+              </View>
             </View>
-          </View>
+          ) : null}
 
           <View style={styles.section}>
             <ThemedText style={styles.sectionTitle}>Source</ThemedText>

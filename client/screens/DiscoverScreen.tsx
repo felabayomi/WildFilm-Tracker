@@ -1,5 +1,5 @@
-import React, { useCallback } from "react";
-import { StyleSheet, View, FlatList, ScrollView, Dimensions, RefreshControl } from "react-native";
+import React, { useCallback, useEffect } from "react";
+import { StyleSheet, View, FlatList, ScrollView, Pressable, Text, ActivityIndicator, RefreshControl } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useHeaderHeight } from "@react-navigation/elements";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
@@ -7,17 +7,16 @@ import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 
 import { useTheme } from "@/hooks/useTheme";
-import { useFilms } from "@/hooks/useFilmData";
-import { Colors, Spacing } from "@/constants/theme";
+import { useFilms, cacheFilm } from "@/hooks/useFilmData";
+import { useTMDBFilms } from "@/hooks/useTMDBFilms";
+import { Colors, Spacing, FontSizes } from "@/constants/theme";
 import { FilmPoster } from "@/components/FilmPoster";
 import { CategoryChip } from "@/components/CategoryChip";
 import { SectionHeader } from "@/components/SectionHeader";
 import { FilmPosterSkeleton } from "@/components/SkeletonLoader";
-import { CATEGORIES, COLLECTIONS } from "@/data/films";
+import { CATEGORIES, SAMPLE_FILMS } from "@/data/films";
 import { Film, FilmCategory } from "@/types/film";
 import { RootStackParamList } from "@/navigation/RootStackNavigator";
-
-const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
 export default function DiscoverScreen() {
   const insets = useSafeAreaInsets();
@@ -26,14 +25,33 @@ export default function DiscoverScreen() {
   const { theme } = useTheme();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   
-  const { films, featuredFilms, newReleases, isLoading, refetch } = useFilms();
+  const { featuredFilms, isLoading: localLoading, refetch: refetchLocal } = useFilms();
+  const { 
+    films: tmdbFilms, 
+    isLoading: tmdbLoading, 
+    isLoadingMore,
+    hasMore,
+    loadMore,
+    refresh: refreshTMDB,
+    totalResults,
+    error: tmdbError
+  } = useTMDBFilms();
+  
   const [refreshing, setRefreshing] = React.useState(false);
+
+  useEffect(() => {
+    refreshTMDB();
+  }, []);
+
+  useEffect(() => {
+    tmdbFilms.forEach(film => cacheFilm(film));
+  }, [tmdbFilms]);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    await refetch();
+    await Promise.all([refetchLocal(), refreshTMDB()]);
     setRefreshing(false);
-  }, [refetch]);
+  }, [refetchLocal, refreshTMDB]);
 
   const handleFilmPress = (film: Film) => {
     navigation.navigate("FilmDetails", { filmId: film.id });
@@ -46,7 +64,7 @@ export default function DiscoverScreen() {
   const heroFilm = featuredFilms[0];
 
   const renderHero = () => {
-    if (isLoading) {
+    if (localLoading) {
       return (
         <View style={styles.heroContainer}>
           <FilmPosterSkeleton size="large" />
@@ -66,35 +84,6 @@ export default function DiscoverScreen() {
       </View>
     );
   };
-
-  const renderNewReleases = () => (
-    <View style={styles.section}>
-      <SectionHeader title="New Releases" showSeeAll={false} />
-      {isLoading ? (
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.horizontalList}>
-          {[1, 2, 3].map((i) => (
-            <FilmPosterSkeleton key={i} size="medium" />
-          ))}
-        </ScrollView>
-      ) : (
-        <FlatList
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.horizontalList}
-          data={newReleases}
-          keyExtractor={(item) => item.id}
-          renderItem={({ item }) => (
-            <FilmPoster
-              film={item}
-              size="medium"
-              showYear
-              onPress={() => handleFilmPress(item)}
-            />
-          )}
-        />
-      )}
-    </View>
-  );
 
   const renderCategories = () => (
     <View style={styles.section}>
@@ -120,8 +109,12 @@ export default function DiscoverScreen() {
 
   const renderFeatured = () => (
     <View style={styles.section}>
-      <SectionHeader title="Featured Films" showSeeAll={false} />
-      {isLoading ? (
+      <SectionHeader 
+        title="Featured Films" 
+        subtitle="Award-winning documentaries with verified streaming"
+        showSeeAll={false} 
+      />
+      {localLoading ? (
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.horizontalList}>
           {[1, 2, 3].map((i) => (
             <FilmPosterSkeleton key={i} size="medium" />
@@ -147,80 +140,91 @@ export default function DiscoverScreen() {
     </View>
   );
 
-  const renderCollections = () => (
-    <View style={styles.section}>
-      <SectionHeader title="Collections" showSeeAll={false} />
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.horizontalList}
-      >
-        {COLLECTIONS.map((collection) => {
-          const collectionFilms = films.filter((f) =>
-            collection.filmIds.includes(f.id)
-          );
-          const firstFilm = collectionFilms[0];
-          if (!firstFilm) return null;
+  const renderAllFilms = () => {
+    const allFilms = [...SAMPLE_FILMS, ...tmdbFilms];
+    const uniqueFilms = allFilms.filter((film, index, self) => 
+      index === self.findIndex((f) => f.title.toLowerCase() === film.title.toLowerCase())
+    );
 
-          return (
-            <View key={collection.id} style={styles.collectionCard}>
-              <FilmPoster
-                film={firstFilm}
-                size="medium"
-                showTitle={false}
-                onPress={() =>
-                  navigation.navigate("Collection", { collectionId: collection.id })
-                }
-              />
-              <View style={styles.collectionOverlay}>
-                <View style={styles.collectionLabel}>
-                  <View style={styles.collectionTextContainer}>
-                    <View style={styles.collectionTitleRow}>
-                      <View style={styles.collectionBadge}>
-                        <View style={styles.collectionCount}>
-                          <View style={styles.collectionCountText} />
-                        </View>
-                      </View>
-                    </View>
-                  </View>
-                </View>
-              </View>
-            </View>
-          );
-        })}
-      </ScrollView>
-    </View>
-  );
-
-  const renderAllFilms = () => (
-    <View style={styles.section}>
-      <SectionHeader title="All Films" showSeeAll={false} />
-      {isLoading ? (
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.horizontalList}>
-          {[1, 2, 3, 4].map((i) => (
-            <FilmPosterSkeleton key={i} size="medium" />
-          ))}
-        </ScrollView>
-      ) : (
-        <FlatList
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.horizontalList}
-          data={films}
-          keyExtractor={(item) => item.id}
-          renderItem={({ item }) => (
-            <FilmPoster
-              film={item}
-              size="medium"
-              showYear
-              showRating
-              onPress={() => handleFilmPress(item)}
-            />
-          )}
+    return (
+      <View style={styles.section}>
+        <SectionHeader 
+          title="All Wildlife Films" 
+          subtitle={totalResults > 0 ? `${totalResults}+ films from TMDB` : undefined}
+          showSeeAll={false} 
         />
-      )}
-    </View>
-  );
+        {tmdbLoading && tmdbFilms.length === 0 ? (
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.horizontalList}>
+            {[1, 2, 3, 4].map((i) => (
+              <FilmPosterSkeleton key={i} size="medium" />
+            ))}
+          </ScrollView>
+        ) : tmdbError ? (
+          <View style={styles.errorContainer}>
+            <Text style={[styles.errorText, { color: theme.textSecondary }]}>
+              Using curated collection
+            </Text>
+            <FlatList
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.horizontalList}
+              data={SAMPLE_FILMS}
+              keyExtractor={(item) => item.id}
+              renderItem={({ item }) => (
+                <FilmPoster
+                  film={item}
+                  size="medium"
+                  showYear
+                  showRating
+                  onPress={() => handleFilmPress(item)}
+                />
+              )}
+            />
+          </View>
+        ) : (
+          <View>
+            <FlatList
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.horizontalList}
+              data={uniqueFilms}
+              keyExtractor={(item) => item.id}
+              renderItem={({ item }) => (
+                <FilmPoster
+                  film={item}
+                  size="medium"
+                  showYear
+                  showRating
+                  onPress={() => handleFilmPress(item)}
+                />
+              )}
+              onEndReached={hasMore ? loadMore : undefined}
+              onEndReachedThreshold={0.5}
+              ListFooterComponent={
+                hasMore ? (
+                  <View style={styles.loadMoreContainer}>
+                    {isLoadingMore ? (
+                      <View style={styles.loadingMore}>
+                        <ActivityIndicator size="small" color={Colors.dark.accent} />
+                        <Text style={styles.loadingMoreText}>Loading more...</Text>
+                      </View>
+                    ) : (
+                      <Pressable 
+                        style={styles.loadMoreButton}
+                        onPress={loadMore}
+                      >
+                        <Text style={styles.loadMoreText}>Load More</Text>
+                      </Pressable>
+                    )}
+                  </View>
+                ) : null
+              }
+            />
+          </View>
+        )}
+      </View>
+    );
+  };
 
   return (
     <ScrollView
@@ -240,7 +244,6 @@ export default function DiscoverScreen() {
       }
     >
       {renderHero()}
-      {renderNewReleases()}
       {renderCategories()}
       {renderFeatured()}
       {renderAllFilms()}
@@ -269,25 +272,36 @@ const styles = StyleSheet.create({
   categoryItem: {
     marginRight: Spacing.md,
   },
-  collectionCard: {
-    marginRight: Spacing.md,
-    position: "relative",
+  errorContainer: {
+    paddingHorizontal: Spacing.lg,
   },
-  collectionOverlay: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
+  errorText: {
+    fontSize: FontSizes.sm,
+    marginBottom: Spacing.md,
   },
-  collectionLabel: {
-    padding: Spacing.sm,
-  },
-  collectionTextContainer: {},
-  collectionTitleRow: {
-    flexDirection: "row",
+  loadMoreContainer: {
+    justifyContent: "center",
     alignItems: "center",
+    paddingHorizontal: Spacing.lg,
+    minWidth: 120,
   },
-  collectionBadge: {},
-  collectionCount: {},
-  collectionCountText: {},
+  loadMoreButton: {
+    backgroundColor: Colors.dark.accent,
+    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.xl,
+    borderRadius: 20,
+  },
+  loadMoreText: {
+    color: Colors.dark.background,
+    fontSize: FontSizes.sm,
+    fontWeight: "600",
+  },
+  loadingMore: {
+    alignItems: "center",
+    gap: Spacing.sm,
+  },
+  loadingMoreText: {
+    color: Colors.dark.accent,
+    fontSize: FontSizes.xs,
+  },
 });

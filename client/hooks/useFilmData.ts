@@ -3,6 +3,16 @@ import { UserFilmData, Film } from "@/types/film";
 import { SAMPLE_FILMS } from "@/data/films";
 import * as storage from "@/lib/storage";
 
+const filmCache: Record<string, Film> = {};
+
+export function cacheFilm(film: Film) {
+  filmCache[film.id] = film;
+}
+
+export function getCachedFilm(id: string): Film | undefined {
+  return filmCache[id] || SAMPLE_FILMS.find(f => f.id === id);
+}
+
 export function useFilms() {
   const [films] = useState<Film[]>(SAMPLE_FILMS);
   const [userFilmData, setUserFilmData] = useState<Record<string, UserFilmData>>({});
@@ -52,7 +62,7 @@ export function useFilms() {
   }, [loadData]);
 
   const getFilmById = useCallback((id: string) => {
-    return films.find((f) => f.id === id);
+    return films.find((f) => f.id === id) || getCachedFilm(id);
   }, [films]);
 
   const getFilmUserData = useCallback((filmId: string) => {
