@@ -133,11 +133,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const data: TMDBResponse = await response.json();
       
-      const documentaries = data.results.filter(movie => 
-        movie.genre_ids.includes(DOCUMENTARY_GENRE_ID)
-      );
+      // Filter for documentaries AND wildlife content
+      const wildlifeDocumentaries = data.results.filter(movie => {
+        if (!movie.genre_ids.includes(DOCUMENTARY_GENRE_ID)) return false;
+        const text = (movie.title + ' ' + movie.overview).toLowerCase();
+        return WILDLIFE_TERMS.some(term => text.includes(term));
+      });
 
-      const films = documentaries.map((movie) => ({
+      const films = wildlifeDocumentaries.map((movie) => ({
         id: `tmdb-${movie.id}`,
         tmdbId: movie.id,
         title: movie.title,
