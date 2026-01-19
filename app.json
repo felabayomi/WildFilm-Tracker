@@ -1,16 +1,16 @@
 {
   "expo": {
-    "name": "WildFilms",
-    "slug": "wildfilms",
+    "name": "WildlifeFilms",
+    "slug": "wildlifefilms",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "wildfilms",
+    "scheme": "wildlifefilms",
     "userInterfaceStyle": "dark",
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.wildfilms.app"
+      "bundleIdentifier": "com.wildlifefilms.app"
     },
     "android": {
       "adaptiveIcon": {
@@ -19,7 +19,7 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.wildfilms.app"
+      "package": "com.wildlifefilms.app"
     },
     "web": {
       "output": "single",
