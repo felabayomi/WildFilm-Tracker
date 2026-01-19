@@ -19,6 +19,7 @@ import * as WebBrowser from "expo-web-browser";
 
 import { useTheme } from "@/hooks/useTheme";
 import { useFilms } from "@/hooks/useFilmData";
+import { useWatchProviders } from "@/hooks/useWatchProviders";
 import { Colors, Spacing, BorderRadius } from "@/constants/theme";
 import { ThemedText } from "@/components/ThemedText";
 import { Button } from "@/components/Button";
@@ -51,8 +52,12 @@ export default function FilmDetailsScreen() {
   const userData = getFilmUserData(filmId);
   const inWatchlist = isInWatchlist(filmId);
   const watched = isWatched(filmId);
+  
+  const { providers: realProviders, isLoading: providersLoading } = useWatchProviders(filmId);
 
   const [userRating, setUserRating] = useState(userData?.userRating || 0);
+  
+  const watchProviders = realProviders.length > 0 ? realProviders : film?.whereToWatch || [];
 
   if (!film) {
     return (
@@ -112,13 +117,15 @@ export default function FilmDetailsScreen() {
     
     let shareMessage = `Check out "${film.title}" - ${synopsisTruncated}`;
     
-    const streamingSources = film.whereToWatch.filter(s => s.type === "stream");
+    const streamingSources = watchProviders.filter(s => s.type === "stream");
     if (streamingSources.length > 0) {
       const serviceNames = streamingSources.map(s => `@${s.name.replace(/\s+/g, '')}`).join(', ');
       shareMessage += `\n\nStreaming on: ${serviceNames}`;
-    } else if (film.whereToWatch.length > 0) {
-      const serviceName = film.whereToWatch[0].name;
-      shareMessage += `\n\nAvailable on: @${serviceName.replace(/\s+/g, '')}`;
+    } else if (watchProviders.length > 0) {
+      const serviceName = watchProviders[0].name;
+      if (serviceName !== "View Options" && serviceName !== "Find Streaming") {
+        shareMessage += `\n\nAvailable on: @${serviceName.replace(/\s+/g, '')}`;
+      }
     }
     
     const appDomain = process.env.EXPO_PUBLIC_DOMAIN || "wildfilms.replit.app";
@@ -132,7 +139,7 @@ export default function FilmDetailsScreen() {
     } catch (error) {
       console.log("Error sharing:", error);
     }
-  }, [film]);
+  }, [film, watchProviders]);
 
   const SpeciesChip = ({ species }: { species: string }) => (
     <View style={styles.speciesChip}>
@@ -236,11 +243,13 @@ export default function FilmDetailsScreen() {
             </View>
           </View>
 
-          {film.whereToWatch.length > 0 ? (
-            <View style={styles.section}>
-              <ThemedText style={styles.sectionTitle}>Where to Watch</ThemedText>
+          <View style={styles.section}>
+            <ThemedText style={styles.sectionTitle}>Where to Watch</ThemedText>
+            {providersLoading ? (
+              <ThemedText style={styles.loadingText}>Loading streaming options...</ThemedText>
+            ) : watchProviders.length > 0 ? (
               <View style={styles.watchSourcesContainer}>
-                {film.whereToWatch.map((source, index) => (
+                {watchProviders.map((source, index) => (
                   <Pressable
                     key={index}
                     style={({ pressed }) => [
@@ -273,8 +282,12 @@ export default function FilmDetailsScreen() {
                   </Pressable>
                 ))}
               </View>
-            </View>
-          ) : null}
+            ) : (
+              <ThemedText style={styles.noProvidersText}>
+                No streaming options found for your region
+              </ThemedText>
+            )}
+          </View>
 
           <View style={styles.section}>
             <ThemedText style={styles.sectionTitle}>Your Rating</ThemedText>
@@ -483,6 +496,16 @@ const styles = StyleSheet.create({
     marginLeft: Spacing.md,
   },
   watchSourcesContainer: {},
+  loadingText: {
+    fontSize: 14,
+    color: Colors.dark.textSecondary,
+    fontStyle: "italic",
+  },
+  noProvidersText: {
+    fontSize: 14,
+    color: Colors.dark.textSecondary,
+    fontStyle: "italic",
+  },
   watchSourceButton: {
     flexDirection: "row",
     alignItems: "center",
