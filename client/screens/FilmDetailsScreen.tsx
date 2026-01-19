@@ -106,15 +106,27 @@ export default function FilmDetailsScreen() {
   const handleShare = useCallback(async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     
-    const primaryWatchLink = film.whereToWatch[0]?.url || "";
-    const shareMessage = `Check out "${film.title}" - ${film.synopsis.substring(0, 100)}...`;
-    const fullMessage = primaryWatchLink 
-      ? `${shareMessage}\n\nWatch here: ${primaryWatchLink}`
-      : shareMessage;
+    const synopsisTruncated = film.synopsis.length > 100 
+      ? `${film.synopsis.substring(0, 100)}...` 
+      : film.synopsis;
+    
+    let shareMessage = `Check out "${film.title}" - ${synopsisTruncated}`;
+    
+    const streamingSources = film.whereToWatch.filter(s => s.type === "stream");
+    if (streamingSources.length > 0) {
+      const serviceNames = streamingSources.map(s => `@${s.name.replace(/\s+/g, '')}`).join(', ');
+      shareMessage += `\n\nStreaming on: ${serviceNames}`;
+    } else if (film.whereToWatch.length > 0) {
+      const serviceName = film.whereToWatch[0].name;
+      shareMessage += `\n\nAvailable on: @${serviceName.replace(/\s+/g, '')}`;
+    }
+    
+    const appDomain = process.env.EXPO_PUBLIC_DOMAIN || "wildfilms.replit.app";
+    shareMessage += `\n\nFind where to watch any wildlife movie or show with WildFilms: https://${appDomain}`;
 
     try {
       await Share.share({
-        message: fullMessage,
+        message: shareMessage,
         title: film.title,
       });
     } catch (error) {
