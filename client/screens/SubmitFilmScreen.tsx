@@ -428,7 +428,6 @@ export default function SubmitFilmScreen() {
           onPress={handleSubmit}
           disabled={isSubmitting}
           style={styles.submitButton}
-          testID="button-submit-film"
         >
           {isSubmitting ? (
             <ActivityIndicator color="#0D0D0D" />
