@@ -1,25 +1,24 @@
 import React from "react";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
-
-import ProfileScreen from "@/screens/ProfileScreen";
+import WatchlistScreen from "@/screens/WatchlistScreen";
 import { useScreenOptions } from "@/hooks/useScreenOptions";
 
-export type ProfileStackParamList = {
-  Profile: undefined;
+export type WatchlistStackParamList = {
+  Watchlist: undefined;
 };
 
-const Stack = createNativeStackNavigator<ProfileStackParamList>();
+const Stack = createNativeStackNavigator<WatchlistStackParamList>();
 
-export default function ProfileStackNavigator() {
+export default function WatchlistStackNavigator() {
   const screenOptions = useScreenOptions();
 
   return (
     <Stack.Navigator screenOptions={screenOptions}>
       <Stack.Screen
-        name="Profile"
-        component={ProfileScreen}
+        name="Watchlist"
+        component={WatchlistScreen}
         options={{
-          headerTitle: "Profile",
+          headerTitle: "Watchlist",
         }}
       />
     </Stack.Navigator>

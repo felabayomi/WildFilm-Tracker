@@ -1,12 +1,17 @@
 import React from "react";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import MainTabNavigator from "@/navigation/MainTabNavigator";
-import ModalScreen from "@/screens/ModalScreen";
+import FilmDetailsScreen from "@/screens/FilmDetailsScreen";
+import CategoryFilmsScreen from "@/screens/CategoryFilmsScreen";
+import CollectionScreen from "@/screens/CollectionScreen";
 import { useScreenOptions } from "@/hooks/useScreenOptions";
+import { FilmCategory } from "@/types/film";
 
 export type RootStackParamList = {
   Main: undefined;
-  Modal: undefined;
+  FilmDetails: { filmId: string };
+  CategoryFilms: { category: FilmCategory };
+  Collection: { collectionId: string };
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -22,11 +27,25 @@ export default function RootStackNavigator() {
         options={{ headerShown: false }}
       />
       <Stack.Screen
-        name="Modal"
-        component={ModalScreen}
+        name="FilmDetails"
+        component={FilmDetailsScreen}
         options={{
-          presentation: "modal",
-          headerTitle: "Modal",
+          headerTitle: "",
+          headerTransparent: true,
+        }}
+      />
+      <Stack.Screen
+        name="CategoryFilms"
+        component={CategoryFilmsScreen}
+        options={{
+          headerTitle: "Category",
+        }}
+      />
+      <Stack.Screen
+        name="Collection"
+        component={CollectionScreen}
+        options={{
+          headerTitle: "Collection",
         }}
       />
     </Stack.Navigator>
