@@ -92,10 +92,15 @@ export default function FilmDetailsScreen() {
 
   const handleWatchSourcePress = async (url: string) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    await WebBrowser.openBrowserAsync(url, {
-      presentationStyle: WebBrowser.WebBrowserPresentationStyle.PAGE_SHEET,
-      controlsColor: Colors.dark.accent,
-    });
+    
+    if (Platform.OS === 'web') {
+      window.open(url, '_blank');
+    } else {
+      await WebBrowser.openBrowserAsync(url, {
+        presentationStyle: WebBrowser.WebBrowserPresentationStyle.PAGE_SHEET,
+        controlsColor: Colors.dark.accent,
+      });
+    }
   };
 
   const handleShare = useCallback(async () => {
