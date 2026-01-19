@@ -1,9 +1,19 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { UserFilmData } from "@/types/film";
+import { UserFilmData, Film } from "@/types/film";
+
+export interface StoredFilmData {
+  id: string;
+  title: string;
+  runtime: number;
+  posterUrl: string;
+  year: number;
+  rating?: number;
+}
 
 const STORAGE_KEYS = {
   USER_FILM_DATA: "user_film_data",
   FAVORITE_SOURCES: "favorite_sources",
+  WATCHED_FILMS_DATA: "watched_films_data",
 };
 
 export async function getUserFilmData(): Promise<Record<string, UserFilmData>> {
@@ -121,5 +131,28 @@ export async function toggleFavoriteSource(source: string): Promise<void> {
     );
   } catch (error) {
     console.error("Error toggling favorite source:", error);
+  }
+}
+
+export async function getStoredWatchedFilms(): Promise<Record<string, StoredFilmData>> {
+  try {
+    const data = await AsyncStorage.getItem(STORAGE_KEYS.WATCHED_FILMS_DATA);
+    return data ? JSON.parse(data) : {};
+  } catch (error) {
+    console.error("Error getting stored watched films:", error);
+    return {};
+  }
+}
+
+export async function storeWatchedFilm(film: StoredFilmData): Promise<void> {
+  try {
+    const allFilms = await getStoredWatchedFilms();
+    allFilms[film.id] = film;
+    await AsyncStorage.setItem(
+      STORAGE_KEYS.WATCHED_FILMS_DATA,
+      JSON.stringify(allFilms)
+    );
+  } catch (error) {
+    console.error("Error storing watched film:", error);
   }
 }
