@@ -1,6 +1,9 @@
 import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "node:http";
 import OpenAI from "openai";
+import { db } from "./db";
+import { filmSubmissions, insertFilmSubmissionSchema } from "@shared/schema";
+import { eq } from "drizzle-orm";
 
 const openai = new OpenAI({
   apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
@@ -745,6 +748,100 @@ Return ONLY the summary text, nothing else.`
 </body>
 </html>
     `);
+  });
+
+  // Film submission API for filmmakers
+  app.post("/api/submissions", async (req: Request, res: Response) => {
+    try {
+      const validatedData = insertFilmSubmissionSchema.parse(req.body);
+      
+      const [submission] = await db.insert(filmSubmissions)
+        .values(validatedData)
+        .returning();
+      
+      res.status(201).json({
+        success: true,
+        message: "Your film has been submitted successfully! We'll review it and get back to you.",
+        submission: {
+          id: submission.id,
+          title: submission.title,
+          status: submission.status,
+        }
+      });
+    } catch (error: any) {
+      console.error("Film submission error:", error);
+      
+      if (error.name === "ZodError") {
+        return res.status(400).json({
+          success: false,
+          error: "Invalid submission data",
+          details: error.errors
+        });
+      }
+      
+      res.status(500).json({
+        success: false,
+        error: "Failed to submit film. Please try again."
+      });
+    }
+  });
+
+  // Get submission status by ID (for filmmakers to check their submission)
+  app.get("/api/submissions/:id", async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      
+      const [submission] = await db.select()
+        .from(filmSubmissions)
+        .where(eq(filmSubmissions.id, id));
+      
+      if (!submission) {
+        return res.status(404).json({ error: "Submission not found" });
+      }
+      
+      res.json({
+        id: submission.id,
+        title: submission.title,
+        status: submission.status,
+        submittedAt: submission.submittedAt,
+        reviewNotes: submission.reviewNotes,
+      });
+    } catch (error) {
+      console.error("Get submission error:", error);
+      res.status(500).json({ error: "Failed to fetch submission" });
+    }
+  });
+
+  // Categories available for film submissions
+  app.get("/api/submissions/categories", (_req: Request, res: Response) => {
+    res.json({
+      categories: [
+        { id: "marine", label: "Marine & Ocean Life" },
+        { id: "safari", label: "Safari & Savanna" },
+        { id: "rainforest", label: "Rainforest & Jungle" },
+        { id: "arctic", label: "Arctic & Polar" },
+        { id: "birds", label: "Birds & Avian" },
+        { id: "primates", label: "Primates & Great Apes" },
+        { id: "predators", label: "Predators & Hunters" },
+        { id: "conservation", label: "Conservation & Endangered" },
+        { id: "insects", label: "Insects & Invertebrates" },
+        { id: "freshwater", label: "Freshwater & Rivers" },
+      ],
+      regions: [
+        "North America",
+        "South America",
+        "Canada",
+        "Africa",
+        "Antarctica",
+        "Arctic",
+        "Asia",
+        "Australia",
+        "Europe",
+        "Pacific Ocean",
+        "Atlantic Ocean",
+        "Indian Ocean",
+      ]
+    });
   });
 
   const httpServer = createServer(app);
