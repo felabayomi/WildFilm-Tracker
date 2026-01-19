@@ -654,6 +654,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 32,
+    lineHeight: 42,
     fontWeight: "700",
     fontFamily: "PlayfairDisplay_700Bold",
     color: "#FFFFFF",
