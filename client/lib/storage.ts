@@ -14,6 +14,7 @@ const STORAGE_KEYS = {
   USER_FILM_DATA: "user_film_data",
   FAVORITE_SOURCES: "favorite_sources",
   WATCHED_FILMS_DATA: "watched_films_data",
+  WATCHLIST_FILMS_DATA: "watchlist_films_data",
   USER_PROFILE: "user_profile",
   USER_PREFERENCES: "user_preferences",
 };
@@ -222,6 +223,42 @@ export async function storeWatchedFilm(film: StoredFilmData): Promise<void> {
   }
 }
 
+export async function getStoredWatchlistFilms(): Promise<Record<string, StoredFilmData>> {
+  try {
+    const data = await AsyncStorage.getItem(STORAGE_KEYS.WATCHLIST_FILMS_DATA);
+    return data ? JSON.parse(data) : {};
+  } catch (error) {
+    console.error("Error getting stored watchlist films:", error);
+    return {};
+  }
+}
+
+export async function storeWatchlistFilm(film: StoredFilmData): Promise<void> {
+  try {
+    const allFilms = await getStoredWatchlistFilms();
+    allFilms[film.id] = film;
+    await AsyncStorage.setItem(
+      STORAGE_KEYS.WATCHLIST_FILMS_DATA,
+      JSON.stringify(allFilms)
+    );
+  } catch (error) {
+    console.error("Error storing watchlist film:", error);
+  }
+}
+
+export async function removeStoredWatchlistFilm(filmId: string): Promise<void> {
+  try {
+    const allFilms = await getStoredWatchlistFilms();
+    delete allFilms[filmId];
+    await AsyncStorage.setItem(
+      STORAGE_KEYS.WATCHLIST_FILMS_DATA,
+      JSON.stringify(allFilms)
+    );
+  } catch (error) {
+    console.error("Error removing stored watchlist film:", error);
+  }
+}
+
 export async function clearWatchHistory(): Promise<void> {
   try {
     const userData = await getUserFilmData();
@@ -259,6 +296,7 @@ export async function clearWatchlist(): Promise<void> {
       STORAGE_KEYS.USER_FILM_DATA,
       JSON.stringify(updatedData)
     );
+    await AsyncStorage.removeItem(STORAGE_KEYS.WATCHLIST_FILMS_DATA);
   } catch (error) {
     console.error("Error clearing watchlist:", error);
   }
@@ -269,6 +307,7 @@ export async function clearAllData(): Promise<void> {
     await AsyncStorage.multiRemove([
       STORAGE_KEYS.USER_FILM_DATA,
       STORAGE_KEYS.WATCHED_FILMS_DATA,
+      STORAGE_KEYS.WATCHLIST_FILMS_DATA,
       STORAGE_KEYS.FAVORITE_SOURCES,
       STORAGE_KEYS.USER_PROFILE,
     ]);

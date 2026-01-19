@@ -19,21 +19,24 @@ export function useFilms() {
   const [userFilmData, setUserFilmData] = useState<Record<string, UserFilmData>>({});
   const [watchlistIds, setWatchlistIds] = useState<string[]>([]);
   const [watchedIds, setWatchedIds] = useState<string[]>([]);
-  const [storedFilms, setStoredFilms] = useState<Record<string, StoredFilmData>>({});
+  const [storedWatchedFilms, setStoredWatchedFilms] = useState<Record<string, StoredFilmData>>({});
+  const [storedWatchlistFilms, setStoredWatchlistFilms] = useState<Record<string, StoredFilmData>>({});
   const [isLoading, setIsLoading] = useState(true);
 
   const loadData = useCallback(async () => {
     try {
-      const [userData, watchlist, watched, storedFilmsData] = await Promise.all([
+      const [userData, watchlist, watched, storedWatchedData, storedWatchlistData] = await Promise.all([
         storage.getUserFilmData(),
         storage.getWatchlist(),
         storage.getWatchedFilms(),
         storage.getStoredWatchedFilms(),
+        storage.getStoredWatchlistFilms(),
       ]);
       setUserFilmData(userData);
       setWatchlistIds(watchlist);
       setWatchedIds(watched);
-      setStoredFilms(storedFilmsData);
+      setStoredWatchedFilms(storedWatchedData);
+      setStoredWatchlistFilms(storedWatchlistData);
     } catch (error) {
       console.error("Error loading film data:", error);
     } finally {
@@ -45,19 +48,31 @@ export function useFilms() {
     loadData();
   }, [loadData]);
 
-  const addToWatchlist = useCallback(async (filmId: string) => {
-    await storage.addToWatchlist(filmId);
-    await loadData();
-  }, [loadData]);
-
-  const removeFromWatchlist = useCallback(async (filmId: string) => {
-    await storage.removeFromWatchlist(filmId);
-    await loadData();
-  }, [loadData]);
-
   const getFilmById = useCallback((id: string) => {
     return films.find((f) => f.id === id) || getCachedFilm(id);
   }, [films]);
+
+  const addToWatchlist = useCallback(async (filmId: string) => {
+    const film = getFilmById(filmId);
+    if (film) {
+      await storage.storeWatchlistFilm({
+        id: film.id,
+        title: film.title,
+        runtime: film.runtime,
+        posterUrl: film.posterUrl,
+        year: film.year,
+        rating: film.rating,
+      });
+    }
+    await storage.addToWatchlist(filmId);
+    await loadData();
+  }, [loadData, getFilmById]);
+
+  const removeFromWatchlist = useCallback(async (filmId: string) => {
+    await storage.removeFromWatchlist(filmId);
+    await storage.removeStoredWatchlistFilm(filmId);
+    await loadData();
+  }, [loadData]);
 
   const markAsWatched = useCallback(async (filmId: string, rating?: number, notes?: string) => {
     const film = getFilmById(filmId);
@@ -92,7 +107,33 @@ export function useFilms() {
     return watchedIds.includes(filmId);
   }, [watchedIds]);
 
-  const watchlistFilms = films.filter((f) => watchlistIds.includes(f.id));
+  const watchlistFilms: Film[] = watchlistIds.map((id) => {
+    const filmFromSample = films.find((f) => f.id === id);
+    if (filmFromSample) return filmFromSample;
+    
+    const cachedFilm = getCachedFilm(id);
+    if (cachedFilm) return cachedFilm;
+    
+    const stored = storedWatchlistFilms[id];
+    if (stored) {
+      return {
+        id: stored.id,
+        title: stored.title,
+        year: stored.year,
+        runtime: stored.runtime,
+        posterUrl: stored.posterUrl,
+        rating: stored.rating,
+        director: "Unknown",
+        synopsis: "",
+        category: "safari" as const,
+        species: [],
+        locations: [],
+        source: "Unknown",
+        whereToWatch: [],
+      };
+    }
+    return null;
+  }).filter((f): f is Film => f !== null);
   
   const watchedFilms: Film[] = watchedIds.map((id) => {
     const filmFromSample = films.find((f) => f.id === id);
@@ -101,7 +142,7 @@ export function useFilms() {
     const cachedFilm = getCachedFilm(id);
     if (cachedFilm) return cachedFilm;
     
-    const stored = storedFilms[id];
+    const stored = storedWatchedFilms[id];
     if (stored) {
       return {
         id: stored.id,
