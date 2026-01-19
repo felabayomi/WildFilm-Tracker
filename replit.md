@@ -96,3 +96,26 @@ The backend provides TMDB integration for wildlife films:
 - **Data Management**: Clear watch history, clear watchlist, or clear all app data
 - **Film Tracking**: Films Watched count, Time Logged (hours), and Average Rating update dynamically
 - **Push Notifications**: Dedicated Notifications screen with push notification settings for new films and watchlist reminders
+- **Privacy Screen**: Privacy policy, terms of service, and data usage documentation
+- **Help & Support Screen**: App usage guide, FAQ section, and contact email (wildlifefilm@hotmail.com)
+- **About WildFilms Screen**: App info, version, features highlight, TMDB attribution, and support contact
+
+## Production Deployment
+
+The app is configured for seamless development-to-production deployment:
+
+### Environment Configuration
+- **TMDB_API_KEY**: Stored as a secret (available in both development and production)
+- **OpenAI Integration**: Uses Replit's managed AI credentials (auto-configured)
+- **CORS**: Server uses `REPLIT_DOMAINS` environment variable (includes production domain automatically)
+- **API URLs**: All client API calls use dynamic `EXPO_PUBLIC_DOMAIN` (no hardcoded URLs)
+
+### Build Process
+- **Static Build**: `scripts/build.js` generates static bundles for iOS and Android
+- **Domain Detection**: Build script uses `REPLIT_INTERNAL_APP_DOMAIN` for production builds
+- **Manifests**: Generated with correct production URLs for Expo Go deep linking
+
+### Platforms Supported
+- **Web App**: Runs at production `.replit.app` domain
+- **Expo Go (iOS/Android)**: Scan QR code from landing page to load app
+- **Native Builds**: Can be extended for App Store/Play Store with EAS Build
