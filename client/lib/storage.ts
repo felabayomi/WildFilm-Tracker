@@ -14,7 +14,37 @@ const STORAGE_KEYS = {
   USER_FILM_DATA: "user_film_data",
   FAVORITE_SOURCES: "favorite_sources",
   WATCHED_FILMS_DATA: "watched_films_data",
+  USER_PROFILE: "user_profile",
 };
+
+export interface UserProfile {
+  name: string;
+  bio: string;
+  imageUri?: string;
+}
+
+const DEFAULT_PROFILE: UserProfile = {
+  name: "Wildlife Enthusiast",
+  bio: "Exploring nature through film",
+};
+
+export async function getUserProfile(): Promise<UserProfile> {
+  try {
+    const data = await AsyncStorage.getItem(STORAGE_KEYS.USER_PROFILE);
+    return data ? JSON.parse(data) : DEFAULT_PROFILE;
+  } catch (error) {
+    console.error("Error getting user profile:", error);
+    return DEFAULT_PROFILE;
+  }
+}
+
+export async function saveUserProfile(profile: UserProfile): Promise<void> {
+  try {
+    await AsyncStorage.setItem(STORAGE_KEYS.USER_PROFILE, JSON.stringify(profile));
+  } catch (error) {
+    console.error("Error saving user profile:", error);
+  }
+}
 
 export async function getUserFilmData(): Promise<Record<string, UserFilmData>> {
   try {
