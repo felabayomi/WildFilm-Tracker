@@ -150,14 +150,14 @@ export default function FilmDetailsScreen() {
     if (inWatchlist) {
       await removeFromWatchlist(filmId);
     } else {
-      await addToWatchlist(filmId);
+      await addToWatchlist(filmId, film || undefined);
     }
-  }, [inWatchlist, filmId, addToWatchlist, removeFromWatchlist]);
+  }, [inWatchlist, filmId, film, addToWatchlist, removeFromWatchlist]);
 
   const handleMarkWatched = useCallback(async () => {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    await markAsWatched(filmId, userRating);
-  }, [filmId, userRating, markAsWatched]);
+    await markAsWatched(filmId, userRating, undefined, film || undefined);
+  }, [filmId, userRating, film, markAsWatched]);
 
   const handleRatingChange = useCallback(async (rating: number) => {
     setUserRating(rating);

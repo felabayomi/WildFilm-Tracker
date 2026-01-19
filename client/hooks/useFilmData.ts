@@ -52,8 +52,8 @@ export function useFilms() {
     return films.find((f) => f.id === id) || getCachedFilm(id);
   }, [films]);
 
-  const addToWatchlist = useCallback(async (filmId: string) => {
-    const film = getFilmById(filmId);
+  const addToWatchlist = useCallback(async (filmId: string, filmData?: Film) => {
+    const film = filmData || getFilmById(filmId);
     if (film) {
       await storage.storeWatchlistFilm({
         id: film.id,
@@ -74,8 +74,8 @@ export function useFilms() {
     await loadData();
   }, [loadData]);
 
-  const markAsWatched = useCallback(async (filmId: string, rating?: number, notes?: string) => {
-    const film = getFilmById(filmId);
+  const markAsWatched = useCallback(async (filmId: string, rating?: number, notes?: string, filmData?: Film) => {
+    const film = filmData || getFilmById(filmId);
     if (film) {
       await storage.storeWatchedFilm({
         id: film.id,
