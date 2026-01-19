@@ -27,7 +27,14 @@ import { FilmPoster } from "@/components/FilmPoster";
 import { Button } from "@/components/Button";
 import { Film } from "@/types/film";
 import { RootStackParamList } from "@/navigation/RootStackNavigator";
-import { getUserProfile, saveUserProfile, UserProfile } from "@/lib/storage";
+import {
+  getUserProfile,
+  saveUserProfile,
+  UserProfile,
+  clearWatchHistory,
+  clearWatchlist,
+  clearAllData,
+} from "@/lib/storage";
 
 export default function ProfileScreen() {
   const insets = useSafeAreaInsets();
@@ -37,15 +44,18 @@ export default function ProfileScreen() {
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
-  const { watchedFilms, watchlistFilms, userFilmData } = useFilms();
+  const { watchedFilms, watchlistFilms, userFilmData, refetch } = useFilms();
 
   const [profile, setProfile] = useState<UserProfile>({
     name: "Wildlife Enthusiast",
     bio: "Exploring nature through film",
   });
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
+  const [isPreferencesModalVisible, setIsPreferencesModalVisible] = useState(false);
   const [editName, setEditName] = useState("");
   const [editBio, setEditBio] = useState("");
+  const [isDarkMode, setIsDarkMode] = useState(true);
+  const [notificationsEnabled, setNotificationsEnabled] = useState(false);
 
   useEffect(() => {
     loadProfile();
@@ -120,6 +130,28 @@ export default function ProfileScreen() {
 
   const handleFilmPress = (film: Film) => {
     navigation.navigate("FilmDetails", { filmId: film.id });
+  };
+
+  const handleClearWatchHistory = async () => {
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+    await clearWatchHistory();
+    await refetch();
+    setIsPreferencesModalVisible(false);
+  };
+
+  const handleClearWatchlist = async () => {
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+    await clearWatchlist();
+    await refetch();
+    setIsPreferencesModalVisible(false);
+  };
+
+  const handleClearAllData = async () => {
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+    await clearAllData();
+    await refetch();
+    await loadProfile();
+    setIsPreferencesModalVisible(false);
   };
 
   const StatCard = ({
@@ -246,7 +278,7 @@ export default function ProfileScreen() {
         <View style={styles.menuSection}>
           <ThemedText style={styles.menuTitle}>Settings</ThemedText>
           <View style={styles.menuContainer}>
-            <MenuButton icon="sliders" label="Preferences" />
+            <MenuButton icon="sliders" label="Preferences" onPress={() => setIsPreferencesModalVisible(true)} />
             <MenuButton icon="bell" label="Notifications" />
             <MenuButton icon="shield" label="Privacy" />
             <MenuButton icon="help-circle" label="Help & Support" />
@@ -312,6 +344,86 @@ export default function ProfileScreen() {
             <Button onPress={handleSaveProfile} style={styles.saveButton}>
               Save Changes
             </Button>
+          </View>
+        </View>
+      </Modal>
+
+      <Modal
+        visible={isPreferencesModalVisible}
+        animationType="slide"
+        transparent
+        onRequestClose={() => setIsPreferencesModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View
+            style={[
+              styles.modalContent,
+              { paddingBottom: insets.bottom + Spacing.lg },
+            ]}
+          >
+            <View style={styles.modalHeader}>
+              <ThemedText style={styles.modalTitle}>Preferences</ThemedText>
+              <Pressable
+                onPress={() => setIsPreferencesModalVisible(false)}
+                hitSlop={20}
+              >
+                <Feather name="x" size={24} color={Colors.dark.textSecondary} />
+              </Pressable>
+            </View>
+
+            <View style={styles.preferenceItem}>
+              <View style={styles.preferenceInfo}>
+                <Feather name="moon" size={20} color={Colors.dark.accent} />
+                <ThemedText style={styles.preferenceLabel}>Dark Mode</ThemedText>
+              </View>
+              <Pressable
+                style={[styles.toggle, isDarkMode && styles.toggleActive]}
+                onPress={() => setIsDarkMode(!isDarkMode)}
+              >
+                <View style={[styles.toggleKnob, isDarkMode && styles.toggleKnobActive]} />
+              </Pressable>
+            </View>
+
+            <View style={styles.preferenceItem}>
+              <View style={styles.preferenceInfo}>
+                <Feather name="bell" size={20} color={Colors.dark.accent} />
+                <ThemedText style={styles.preferenceLabel}>Notifications</ThemedText>
+              </View>
+              <Pressable
+                style={[styles.toggle, notificationsEnabled && styles.toggleActive]}
+                onPress={() => setNotificationsEnabled(!notificationsEnabled)}
+              >
+                <View style={[styles.toggleKnob, notificationsEnabled && styles.toggleKnobActive]} />
+              </Pressable>
+            </View>
+
+            <View style={styles.divider} />
+
+            <ThemedText style={styles.sectionLabel}>Data Management</ThemedText>
+
+            <Pressable
+              style={styles.dangerButton}
+              onPress={handleClearWatchHistory}
+            >
+              <Feather name="clock" size={18} color={Colors.dark.error} />
+              <ThemedText style={styles.dangerButtonText}>Reset Watch History</ThemedText>
+            </Pressable>
+
+            <Pressable
+              style={styles.dangerButton}
+              onPress={handleClearWatchlist}
+            >
+              <Feather name="bookmark" size={18} color={Colors.dark.error} />
+              <ThemedText style={styles.dangerButtonText}>Clear Watchlist</ThemedText>
+            </Pressable>
+
+            <Pressable
+              style={[styles.dangerButton, styles.dangerButtonLast]}
+              onPress={handleClearAllData}
+            >
+              <Feather name="trash-2" size={18} color={Colors.dark.error} />
+              <ThemedText style={styles.dangerButtonText}>Clear All Data</ThemedText>
+            </Pressable>
           </View>
         </View>
       </Modal>
@@ -508,5 +620,68 @@ const styles = StyleSheet.create({
   },
   saveButton: {
     marginTop: Spacing.md,
+  },
+  preferenceItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingVertical: Spacing.md,
+  },
+  preferenceInfo: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  preferenceLabel: {
+    fontSize: 16,
+    color: "#FFFFFF",
+    marginLeft: Spacing.md,
+  },
+  toggle: {
+    width: 50,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: Colors.dark.backgroundSecondary,
+    padding: 2,
+    justifyContent: "center",
+  },
+  toggleActive: {
+    backgroundColor: Colors.dark.primary,
+  },
+  toggleKnob: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: "#FFFFFF",
+  },
+  toggleKnobActive: {
+    alignSelf: "flex-end",
+  },
+  divider: {
+    height: 1,
+    backgroundColor: Colors.dark.backgroundSecondary,
+    marginVertical: Spacing.lg,
+  },
+  sectionLabel: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: Colors.dark.textSecondary,
+    marginBottom: Spacing.md,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+  },
+  dangerButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: Spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.dark.backgroundSecondary,
+  },
+  dangerButtonLast: {
+    borderBottomWidth: 0,
+  },
+  dangerButtonText: {
+    fontSize: 16,
+    color: Colors.dark.error,
+    marginLeft: Spacing.md,
   },
 });

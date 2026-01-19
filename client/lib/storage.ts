@@ -186,3 +186,58 @@ export async function storeWatchedFilm(film: StoredFilmData): Promise<void> {
     console.error("Error storing watched film:", error);
   }
 }
+
+export async function clearWatchHistory(): Promise<void> {
+  try {
+    const userData = await getUserFilmData();
+    const updatedData: Record<string, UserFilmData> = {};
+    for (const [filmId, data] of Object.entries(userData)) {
+      updatedData[filmId] = {
+        ...data,
+        isWatched: false,
+        watchedDate: undefined,
+        userRating: undefined,
+      };
+    }
+    await AsyncStorage.setItem(
+      STORAGE_KEYS.USER_FILM_DATA,
+      JSON.stringify(updatedData)
+    );
+    await AsyncStorage.removeItem(STORAGE_KEYS.WATCHED_FILMS_DATA);
+  } catch (error) {
+    console.error("Error clearing watch history:", error);
+  }
+}
+
+export async function clearWatchlist(): Promise<void> {
+  try {
+    const userData = await getUserFilmData();
+    const updatedData: Record<string, UserFilmData> = {};
+    for (const [filmId, data] of Object.entries(userData)) {
+      updatedData[filmId] = {
+        ...data,
+        isInWatchlist: false,
+        addedToWatchlistDate: undefined,
+      };
+    }
+    await AsyncStorage.setItem(
+      STORAGE_KEYS.USER_FILM_DATA,
+      JSON.stringify(updatedData)
+    );
+  } catch (error) {
+    console.error("Error clearing watchlist:", error);
+  }
+}
+
+export async function clearAllData(): Promise<void> {
+  try {
+    await AsyncStorage.multiRemove([
+      STORAGE_KEYS.USER_FILM_DATA,
+      STORAGE_KEYS.WATCHED_FILMS_DATA,
+      STORAGE_KEYS.FAVORITE_SOURCES,
+      STORAGE_KEYS.USER_PROFILE,
+    ]);
+  } catch (error) {
+    console.error("Error clearing all data:", error);
+  }
+}

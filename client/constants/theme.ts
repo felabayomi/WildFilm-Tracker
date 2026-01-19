@@ -28,6 +28,7 @@ export const Colors = {
     accent: "#D4AF37",
     success: "#4CAF50",
     warning: "#FF9800",
+    error: "#EF5350",
     backgroundRoot: "#0D0D0D",
     backgroundDefault: "#1A1A1A",
     backgroundSecondary: "#2A2A2A",
