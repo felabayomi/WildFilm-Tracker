@@ -4,22 +4,21 @@ import { createServer, type Server } from "node:http";
 const TMDB_BASE_URL = "https://api.themoviedb.org/3";
 const DOCUMENTARY_GENRE_ID = 99;
 
+// Strict wildlife-only keywords (excludes general documentary keywords)
 const WILDLIFE_KEYWORDS = [
   9902,    // wildlife
   211505,  // wildlife conservation
-  221355,  // nature documentary
-  211504,  // wildlife reserve
-  167617,  // endangered species
-  6917,    // nature
   4862,    // animal
   1402,    // ocean
   12554,   // safari
-  10683,   // survival
-  33965,   // environment
   14602,   // rainforest
   15162,   // polar
   9882,    // jungle
+  167617,  // endangered species
 ].join("|"); // OR logic - matches films with any of these keywords
+
+// Wildlife terms for text-based filtering
+const WILDLIFE_TERMS = ['animal', 'wildlife', 'ocean', 'sea', 'marine', 'jungle', 'rainforest', 'safari', 'polar', 'arctic', 'elephant', 'lion', 'tiger', 'whale', 'dolphin', 'bird', 'fish', 'shark', 'bear', 'wolf', 'gorilla', 'chimpanzee', 'octopus', 'coral', 'reef', 'forest', 'nature', 'planet earth', 'conservation', 'endangered', 'species', 'predator', 'prey', 'ecosystem', 'serengeti', 'amazon', 'african', 'penguin', 'monkey', 'ape'];
 
 interface TMDBMovie {
   id: number;
@@ -76,7 +75,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const data: TMDBResponse = await response.json();
       
-      const films = data.results.map((movie) => ({
+      // Filter to ensure wildlife content
+      const filteredResults = data.results.filter(movie => {
+        const text = (movie.title + ' ' + movie.overview).toLowerCase();
+        return WILDLIFE_TERMS.some(term => text.includes(term));
+      });
+      
+      const films = filteredResults.map((movie) => ({
         id: `tmdb-${movie.id}`,
         tmdbId: movie.id,
         title: movie.title,
@@ -96,7 +101,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         films,
         page: data.page,
         totalPages: data.total_pages,
-        totalResults: data.total_results,
+        totalResults: filteredResults.length,
       });
     } catch (error) {
       console.error("TMDB API error:", error);
@@ -214,8 +219,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
 
     try {
+      // Use STRICT wildlife-only keywords (no general nature/environment keywords)
+      const STRICT_WILDLIFE_KEYWORDS = [
+        9902,    // wildlife
+        211505,  // wildlife conservation  
+        4862,    // animal
+        12554,   // safari
+        1402,    // ocean
+        14602,   // rainforest
+        9882,    // jungle
+        15162,   // polar
+        167617,  // endangered species
+      ].join("|");
+      
       // Get top-rated wildlife documentaries with high vote counts
-      const url = `${TMDB_BASE_URL}/discover/movie?api_key=${apiKey}&with_genres=${DOCUMENTARY_GENRE_ID}&with_keywords=${WILDLIFE_KEYWORDS}&sort_by=vote_average.desc&vote_count.gte=500&page=1`;
+      const url = `${TMDB_BASE_URL}/discover/movie?api_key=${apiKey}&with_genres=${DOCUMENTARY_GENRE_ID}&with_keywords=${STRICT_WILDLIFE_KEYWORDS}&sort_by=vote_average.desc&vote_count.gte=100&page=1`;
       
       const response = await fetch(url);
       if (!response.ok) {
@@ -224,8 +242,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const data: TMDBResponse = await response.json();
       
+      // Filter to ensure wildlife content - check title/synopsis for wildlife terms
+      const filteredFilms = data.results.filter(movie => {
+        const text = (movie.title + ' ' + movie.overview).toLowerCase();
+        return WILDLIFE_TERMS.some(term => text.includes(term));
+      });
+      
       // Take top 6 highest-rated films
-      const topFilms = data.results.slice(0, 6);
+      const topFilms = filteredFilms.slice(0, 6);
       
       const films = topFilms.map((movie) => ({
         id: `tmdb-${movie.id}`,
