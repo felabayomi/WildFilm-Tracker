@@ -202,6 +202,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get top-rated wildlife documentaries for Featured section
+  app.get("/api/films/featured", async (req: Request, res: Response) => {
+    const apiKey = process.env.TMDB_API_KEY;
+    
+    if (!apiKey) {
+      return res.status(503).json({ 
+        error: "TMDB API key not configured",
+        message: "Add your TMDB API key to enable featured films"
+      });
+    }
+
+    try {
+      // Get top-rated wildlife documentaries with high vote counts
+      const url = `${TMDB_BASE_URL}/discover/movie?api_key=${apiKey}&with_genres=${DOCUMENTARY_GENRE_ID}&with_keywords=${WILDLIFE_KEYWORDS}&sort_by=vote_average.desc&vote_count.gte=500&page=1`;
+      
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`TMDB API error: ${response.status}`);
+      }
+      
+      const data: TMDBResponse = await response.json();
+      
+      // Take top 6 highest-rated films
+      const topFilms = data.results.slice(0, 6);
+      
+      const films = topFilms.map((movie) => ({
+        id: `tmdb-${movie.id}`,
+        tmdbId: movie.id,
+        title: movie.title,
+        year: movie.release_date ? parseInt(movie.release_date.split("-")[0]) : 0,
+        synopsis: movie.overview,
+        posterUrl: movie.poster_path 
+          ? `https://image.tmdb.org/t/p/w500${movie.poster_path}`
+          : null,
+        backdropUrl: movie.backdrop_path
+          ? `https://image.tmdb.org/t/p/w1280${movie.backdrop_path}`
+          : null,
+        rating: Math.round(movie.vote_average * 10) / 10,
+        voteCount: movie.vote_count,
+        isFeatured: true,
+      }));
+
+      res.json({ films });
+    } catch (error) {
+      console.error("TMDB featured films error:", error);
+      res.status(500).json({ error: "Failed to fetch featured films from TMDB" });
+    }
+  });
+
   app.get("/api/status", (_req: Request, res: Response) => {
     res.json({ 
       status: "ok",
