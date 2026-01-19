@@ -234,7 +234,7 @@ export default function SearchScreen() {
             contentContainerStyle={styles.filterChips}
             keyboardShouldPersistTaps="handled"
           >
-            {REGIONS.slice(0, 6).map((region) => (
+            {REGIONS.map((region) => (
               <FilterChip
                 key={region}
                 label={region}

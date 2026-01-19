@@ -305,14 +305,15 @@ export const SOURCES = [
 ];
 
 export const REGIONS = [
+  "North America",
+  "South America",
+  "Canada",
   "Africa",
   "Antarctica",
   "Arctic",
   "Asia",
   "Australia",
   "Europe",
-  "North America",
-  "South America",
   "Pacific Ocean",
   "Atlantic Ocean",
   "Indian Ocean",
