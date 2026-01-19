@@ -4,7 +4,6 @@ import {
   View,
   ScrollView,
   Pressable,
-  Linking,
   Dimensions,
   Share,
   Platform,
@@ -16,7 +15,7 @@ import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { Feather } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
-import * as Sharing from "expo-sharing";
+import * as WebBrowser from "expo-web-browser";
 
 import { useTheme } from "@/hooks/useTheme";
 import { useFilms } from "@/hooks/useFilmData";
@@ -91,8 +90,12 @@ export default function FilmDetailsScreen() {
     await updateRating(filmId, rating);
   }, [filmId, updateRating]);
 
-  const handleWatchSourcePress = (url: string) => {
-    Linking.openURL(url);
+  const handleWatchSourcePress = async (url: string) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    await WebBrowser.openBrowserAsync(url, {
+      presentationStyle: WebBrowser.WebBrowserPresentationStyle.PAGE_SHEET,
+      controlsColor: Colors.dark.accent,
+    });
   };
 
   const handleShare = useCallback(async () => {
