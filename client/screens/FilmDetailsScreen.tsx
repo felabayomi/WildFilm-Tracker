@@ -6,6 +6,8 @@ import {
   Pressable,
   Linking,
   Dimensions,
+  Share,
+  Platform,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useHeaderHeight } from "@react-navigation/elements";
@@ -14,6 +16,7 @@ import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { Feather } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
+import * as Sharing from "expo-sharing";
 
 import { useTheme } from "@/hooks/useTheme";
 import { useFilms } from "@/hooks/useFilmData";
@@ -91,6 +94,25 @@ export default function FilmDetailsScreen() {
   const handleWatchSourcePress = (url: string) => {
     Linking.openURL(url);
   };
+
+  const handleShare = useCallback(async () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    
+    const primaryWatchLink = film.whereToWatch[0]?.url || "";
+    const shareMessage = `Check out "${film.title}" - ${film.synopsis.substring(0, 100)}...`;
+    const fullMessage = primaryWatchLink 
+      ? `${shareMessage}\n\nWatch here: ${primaryWatchLink}`
+      : shareMessage;
+
+    try {
+      await Share.share({
+        message: fullMessage,
+        title: film.title,
+      });
+    } catch (error) {
+      console.log("Error sharing:", error);
+    }
+  }, [film]);
 
   const SpeciesChip = ({ species }: { species: string }) => (
     <View style={styles.speciesChip}>
@@ -271,6 +293,13 @@ export default function FilmDetailsScreen() {
             size={24}
             color={inWatchlist ? Colors.dark.accent : "#FFFFFF"}
           />
+        </Pressable>
+        <Pressable
+          style={styles.shareButton}
+          onPress={handleShare}
+          testID="button-share"
+        >
+          <Feather name="share" size={24} color="#FFFFFF" />
         </Pressable>
         <Button
           onPress={handleMarkWatched}
@@ -489,10 +518,19 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.dark.backgroundSecondary,
     alignItems: "center",
     justifyContent: "center",
-    marginRight: Spacing.md,
+    marginRight: Spacing.sm,
   },
   watchlistButtonActive: {
     backgroundColor: Colors.dark.backgroundDefault,
+  },
+  shareButton: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: Colors.dark.backgroundSecondary,
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: Spacing.md,
   },
   watchedButton: {
     flex: 1,
