@@ -583,9 +583,10 @@ export default function FilmDetailsScreen() {
             inWatchlist && styles.watchlistButtonActive,
           ]}
           onPress={handleWatchlistToggle}
+          testID="button-watchlist"
         >
           <Feather
-            name={inWatchlist ? "bookmark" : "plus"}
+            name="bookmark"
             size={24}
             color={inWatchlist ? Colors.dark.accent : "#FFFFFF"}
           />
