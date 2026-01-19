@@ -3,11 +3,13 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 
 import ProfileScreen from "@/screens/ProfileScreen";
 import NotificationsScreen from "@/screens/NotificationsScreen";
+import PrivacyScreen from "@/screens/PrivacyScreen";
 import { useScreenOptions } from "@/hooks/useScreenOptions";
 
 export type ProfileStackParamList = {
   Profile: undefined;
   Notifications: undefined;
+  Privacy: undefined;
 };
 
 const Stack = createNativeStackNavigator<ProfileStackParamList>();
@@ -29,6 +31,13 @@ export default function ProfileStackNavigator() {
         component={NotificationsScreen}
         options={{
           headerTitle: "Notifications",
+        }}
+      />
+      <Stack.Screen
+        name="Privacy"
+        component={PrivacyScreen}
+        options={{
+          headerTitle: "Privacy",
         }}
       />
     </Stack.Navigator>
