@@ -257,8 +257,7 @@ export default function FilmDetailsScreen() {
       }
     }
     
-    const appDomain = process.env.EXPO_PUBLIC_DOMAIN || "wildfilms.replit.app";
-    shareMessage += `\n\nFind where to watch any wildlife movie or show with WildFilms: https://${appDomain}`;
+    shareMessage += `\n\nFind where to watch any wildlife movie or show with WildFilms: https://wildfilms.app`;
 
     try {
       await Share.share({
