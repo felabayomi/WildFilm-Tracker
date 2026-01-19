@@ -114,16 +114,8 @@ export default function SearchScreen() {
     }
   }, [isInWatchlist, addToWatchlist, removeFromWatchlist]);
 
-  const renderHeader = () => (
+  const renderFiltersHeader = () => (
     <View style={styles.header}>
-      <View style={styles.searchContainer}>
-        <SearchInput
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-          placeholder="Search films, species, filmmakers..."
-        />
-      </View>
-
       <View style={styles.filtersSection}>
         <View style={styles.filterRow}>
           <ThemedText style={styles.filterLabel}>Category</ThemedText>
@@ -131,6 +123,7 @@ export default function SearchScreen() {
             horizontal
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.filterChips}
+            keyboardShouldPersistTaps="handled"
           >
             {CATEGORIES.map((cat) => (
               <FilterChip
@@ -149,6 +142,7 @@ export default function SearchScreen() {
             horizontal
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.filterChips}
+            keyboardShouldPersistTaps="handled"
           >
             {REGIONS.slice(0, 6).map((region) => (
               <FilterChip
@@ -167,6 +161,7 @@ export default function SearchScreen() {
             horizontal
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.filterChips}
+            keyboardShouldPersistTaps="handled"
           >
             {SOURCES.map((source) => (
               <FilterChip
@@ -210,15 +205,22 @@ export default function SearchScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: theme.backgroundRoot }]}>
+      <View style={[styles.searchContainer, { paddingTop: insets.top + Spacing.lg }]}>
+        <SearchInput
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+          placeholder="Search films, species, filmmakers..."
+        />
+      </View>
       <FlatList
         data={filteredFilms}
         keyExtractor={(item) => item.id}
-        ListHeaderComponent={renderHeader}
+        ListHeaderComponent={renderFiltersHeader}
         ListEmptyComponent={renderEmpty}
+        keyboardShouldPersistTaps="handled"
         contentContainerStyle={[
           styles.listContent,
           {
-            paddingTop: insets.top + Spacing.lg,
             paddingBottom: tabBarHeight + Spacing.xl,
           },
         ]}
@@ -242,15 +244,16 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+  searchContainer: {
+    paddingHorizontal: Spacing.lg,
+    paddingBottom: Spacing.md,
+  },
   listContent: {
     paddingHorizontal: Spacing.lg,
     flexGrow: 1,
   },
   header: {
     marginBottom: Spacing.lg,
-  },
-  searchContainer: {
-    marginBottom: Spacing.xl,
   },
   filtersSection: {
     marginBottom: Spacing.lg,
