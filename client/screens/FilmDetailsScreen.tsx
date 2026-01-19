@@ -579,35 +579,46 @@ export default function FilmDetailsScreen() {
       >
         <Pressable
           style={[
-            styles.watchlistButton,
-            inWatchlist && styles.watchlistButtonActive,
+            styles.actionButton,
+            inWatchlist && styles.actionButtonActive,
           ]}
           onPress={handleWatchlistToggle}
           testID="button-watchlist"
         >
           <Feather
-            name="bookmark"
-            size={24}
-            color={inWatchlist ? Colors.dark.accent : "#FFFFFF"}
+            name={inWatchlist ? "check" : "bookmark"}
+            size={20}
+            color={inWatchlist ? Colors.dark.primary : "#FFFFFF"}
           />
+          <ThemedText style={[styles.actionButtonLabel, inWatchlist && styles.actionButtonLabelActive]}>
+            {inWatchlist ? "Saved" : "Save"}
+          </ThemedText>
         </Pressable>
         <Pressable
-          style={styles.shareButton}
+          style={[
+            styles.actionButton,
+            watched && styles.actionButtonActive,
+          ]}
+          onPress={handleMarkWatched}
+          testID="button-watched"
+        >
+          <Feather
+            name={watched ? "check-circle" : "eye"}
+            size={20}
+            color={watched ? Colors.dark.primary : "#FFFFFF"}
+          />
+          <ThemedText style={[styles.actionButtonLabel, watched && styles.actionButtonLabelActive]}>
+            {watched ? "Watched" : "Watched?"}
+          </ThemedText>
+        </Pressable>
+        <Pressable
+          style={styles.actionButton}
           onPress={handleShare}
           testID="button-share"
         >
-          <Feather name="share" size={24} color="#FFFFFF" />
+          <Feather name="share-2" size={20} color="#FFFFFF" />
+          <ThemedText style={styles.actionButtonLabel}>Share</ThemedText>
         </Pressable>
-        <Button
-          onPress={handleMarkWatched}
-          style={[
-            styles.watchedButton,
-            watched && styles.watchedButtonActive,
-          ]}
-          disabled={watched}
-        >
-          {watched ? "Watched" : "Mark as Watched"}
-        </Button>
       </View>
     </View>
   );
@@ -812,39 +823,30 @@ const styles = StyleSheet.create({
     right: 0,
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "space-around",
     paddingHorizontal: Spacing.lg,
-    paddingTop: Spacing.lg,
+    paddingTop: Spacing.md,
     backgroundColor: Colors.dark.backgroundRoot,
     borderTopWidth: 1,
     borderTopColor: Colors.dark.backgroundDefault,
   },
-  watchlistButton: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: Colors.dark.backgroundSecondary,
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: Spacing.sm,
-  },
-  watchlistButtonActive: {
-    backgroundColor: Colors.dark.backgroundDefault,
-  },
-  shareButton: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: Colors.dark.backgroundSecondary,
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: Spacing.md,
-  },
-  watchedButton: {
+  actionButton: {
     flex: 1,
-    backgroundColor: Colors.dark.primary,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: Spacing.sm,
+    gap: 4,
   },
-  watchedButtonActive: {
-    backgroundColor: Colors.dark.backgroundSecondary,
+  actionButtonActive: {
+    opacity: 1,
+  },
+  actionButtonLabel: {
+    fontSize: 12,
+    color: Colors.dark.textSecondary,
+    marginTop: 2,
+  },
+  actionButtonLabelActive: {
+    color: Colors.dark.primary,
   },
   speciesChipFollowed: {
     backgroundColor: "rgba(26, 77, 46, 0.3)",
