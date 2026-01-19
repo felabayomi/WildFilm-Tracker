@@ -8,7 +8,7 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 
 import { useTheme } from "@/hooks/useTheme";
 import { useFilms, cacheFilm } from "@/hooks/useFilmData";
-import { useTMDBFilms } from "@/hooks/useTMDBFilms";
+import { useTMDBFilms, useFeaturedFilms } from "@/hooks/useTMDBFilms";
 import { Colors, Spacing, FontSizes } from "@/constants/theme";
 import { FilmPoster } from "@/components/FilmPoster";
 import { CategoryChip } from "@/components/CategoryChip";
@@ -25,7 +25,7 @@ export default function DiscoverScreen() {
   const { theme } = useTheme();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   
-  const { featuredFilms, isLoading: localLoading, refetch: refetchLocal } = useFilms();
+  const { isLoading: localLoading, refetch: refetchLocal } = useFilms();
   const { 
     films: tmdbFilms, 
     isLoading: tmdbLoading, 
@@ -37,21 +37,30 @@ export default function DiscoverScreen() {
     error: tmdbError
   } = useTMDBFilms();
   
+  const {
+    films: featuredFilms,
+    isLoading: featuredLoading,
+    fetchFeatured,
+    error: featuredError
+  } = useFeaturedFilms();
+  
   const [refreshing, setRefreshing] = React.useState(false);
 
   useEffect(() => {
     refreshTMDB();
+    fetchFeatured();
   }, []);
 
   useEffect(() => {
     tmdbFilms.forEach(film => cacheFilm(film));
-  }, [tmdbFilms]);
+    featuredFilms.forEach(film => cacheFilm(film));
+  }, [tmdbFilms, featuredFilms]);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    await Promise.all([refetchLocal(), refreshTMDB()]);
+    await Promise.all([refetchLocal(), refreshTMDB(), fetchFeatured()]);
     setRefreshing(false);
-  }, [refetchLocal, refreshTMDB]);
+  }, [refetchLocal, refreshTMDB, fetchFeatured]);
 
   const handleFilmPress = (film: Film) => {
     navigation.navigate("FilmDetails", { filmId: film.id });
@@ -68,7 +77,7 @@ export default function DiscoverScreen() {
   }, [featuredFilms]);
 
   const renderHero = () => {
-    if (localLoading) {
+    if (featuredLoading) {
       return (
         <View style={styles.heroContainer}>
           <FilmPosterSkeleton size="large" />
@@ -117,12 +126,18 @@ export default function DiscoverScreen() {
         title="Featured Films" 
         showSeeAll={false} 
       />
-      {localLoading ? (
+      {featuredLoading ? (
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.horizontalList}>
           {[1, 2, 3].map((i) => (
             <FilmPosterSkeleton key={i} size="medium" />
           ))}
         </ScrollView>
+      ) : featuredError ? (
+        <View style={styles.errorContainer}>
+          <Text style={[styles.errorText, { color: theme.textSecondary }]}>
+            Could not load featured films
+          </Text>
+        </View>
       ) : (
         <FlatList
           horizontal

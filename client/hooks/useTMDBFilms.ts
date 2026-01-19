@@ -129,6 +129,50 @@ export function useTMDBFilms() {
   };
 }
 
+export function useFeaturedFilms() {
+  const [films, setFilms] = useState<Film[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchFeatured = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const baseUrl = getApiUrl();
+      const url = new URL("/api/films/featured", baseUrl);
+      
+      const response = await fetch(url.toString());
+      
+      if (!response.ok) {
+        throw new Error("Failed to fetch featured films");
+      }
+      
+      const data = await response.json();
+      const mappedFilms = data.films.map(mapTMDBToFilm);
+      
+      // Mark all as featured
+      mappedFilms.forEach((film: Film) => {
+        film.isFeatured = true;
+      });
+      
+      setFilms(mappedFilms);
+    } catch (err) {
+      console.error("Error fetching featured films:", err);
+      setError(err instanceof Error ? err.message : "Failed to fetch featured films");
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  return {
+    films,
+    isLoading,
+    error,
+    fetchFeatured,
+  };
+}
+
 export function useTMDBSearch() {
   const [results, setResults] = useState<Film[]>([]);
   const [isSearching, setIsSearching] = useState(false);
