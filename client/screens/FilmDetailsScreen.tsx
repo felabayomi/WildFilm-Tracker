@@ -8,6 +8,8 @@ import {
   Share,
   Platform,
   ActivityIndicator,
+  TextInput,
+  Linking,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useHeaderHeight } from "@react-navigation/elements";
@@ -22,12 +24,21 @@ import { useTheme } from "@/hooks/useTheme";
 import { useFilms } from "@/hooks/useFilmData";
 import { useWatchProviders } from "@/hooks/useWatchProviders";
 import { getApiUrl } from "@/lib/query-client";
+import { getFavoriteSpecies, toggleFavoriteSpecies, updateUserNotes } from "@/lib/storage";
 import { Colors, Spacing, BorderRadius } from "@/constants/theme";
 import { ThemedText } from "@/components/ThemedText";
 import { Button } from "@/components/Button";
 import { RatingStars } from "@/components/RatingStars";
 import { RootStackParamList } from "@/navigation/RootStackNavigator";
 import { Film } from "@/types/film";
+
+interface VideoInfo {
+  id: string;
+  key: string;
+  name: string;
+  type: string;
+  site: string;
+}
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
@@ -60,6 +71,10 @@ export default function FilmDetailsScreen() {
   const [isLoadingTMDB, setIsLoadingTMDB] = useState(false);
   const [tmdbError, setTmdbError] = useState(false);
   const [userRating, setUserRating] = useState(userData?.userRating || 0);
+  const [userNotes, setUserNotes] = useState(userData?.userNotes || "");
+  const [isEditingNotes, setIsEditingNotes] = useState(false);
+  const [videos, setVideos] = useState<VideoInfo[]>([]);
+  const [favoriteSpeciesList, setFavoriteSpeciesList] = useState<string[]>([]);
   
   // Get TMDB ID for watch providers (works for both local and TMDB films)
   const tmdbIdForProviders = filmId.startsWith("tmdb-") ? filmId.replace("tmdb-", "") : filmId;
@@ -96,6 +111,36 @@ export default function FilmDetailsScreen() {
     }
   }, [filmId, localFilm]);
 
+  // Fetch videos/trailers for TMDB films
+  useEffect(() => {
+    if (filmId.startsWith("tmdb-")) {
+      const tmdbId = filmId.replace("tmdb-", "");
+      const fetchVideos = async () => {
+        try {
+          const baseUrl = getApiUrl();
+          const url = new URL(`/api/films/${tmdbId}/videos`, baseUrl);
+          const response = await fetch(url.toString());
+          if (response.ok) {
+            const data = await response.json();
+            setVideos(data.videos || []);
+          }
+        } catch (error) {
+          console.error("Error fetching videos:", error);
+        }
+      };
+      fetchVideos();
+    }
+  }, [filmId]);
+
+  // Load favorite species
+  useEffect(() => {
+    const loadFavoriteSpecies = async () => {
+      const species = await getFavoriteSpecies();
+      setFavoriteSpeciesList(species);
+    };
+    loadFavoriteSpecies();
+  }, []);
+
   const film = localFilm || tmdbFilm;
   const watchProviders = realProviders.length > 0 ? realProviders : film?.whereToWatch || [];
 
@@ -118,6 +163,38 @@ export default function FilmDetailsScreen() {
     setUserRating(rating);
     await updateRating(filmId, rating);
   }, [filmId, updateRating]);
+
+  const handleSaveNotes = useCallback(async () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    await updateUserNotes(filmId, userNotes);
+    setIsEditingNotes(false);
+  }, [filmId, userNotes]);
+
+  const handleToggleSpecies = useCallback(async (species: string) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    const isNowFavorite = await toggleFavoriteSpecies(species);
+    if (isNowFavorite) {
+      setFavoriteSpeciesList(prev => [...prev, species]);
+    } else {
+      setFavoriteSpeciesList(prev => prev.filter(s => s.toLowerCase() !== species.toLowerCase()));
+    }
+  }, []);
+
+  const handleWatchTrailer = useCallback(async (videoKey: string) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    const youtubeUrl = `https://www.youtube.com/watch?v=${videoKey}`;
+    if (Platform.OS === 'web') {
+      window.open(youtubeUrl, '_blank');
+    } else {
+      await WebBrowser.openBrowserAsync(youtubeUrl, {
+        presentationStyle: WebBrowser.WebBrowserPresentationStyle.PAGE_SHEET,
+      });
+    }
+  }, []);
+
+  const isSpeciesFollowed = useCallback((species: string) => {
+    return favoriteSpeciesList.some(s => s.toLowerCase() === species.toLowerCase());
+  }, [favoriteSpeciesList]);
 
   const handleWatchSourcePress = useCallback(async (url: string) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -231,12 +308,24 @@ export default function FilmDetailsScreen() {
     );
   }
 
-  const SpeciesChip = ({ species }: { species: string }) => (
-    <View style={styles.speciesChip}>
-      <Feather name="github" size={14} color={Colors.dark.accent} />
-      <ThemedText style={styles.speciesText}>{species}</ThemedText>
-    </View>
-  );
+  const SpeciesChip = ({ species }: { species: string }) => {
+    const isFollowed = isSpeciesFollowed(species);
+    return (
+      <Pressable
+        style={[styles.speciesChip, isFollowed && styles.speciesChipFollowed]}
+        onPress={() => handleToggleSpecies(species)}
+      >
+        <Feather 
+          name={isFollowed ? "heart" : "plus"} 
+          size={14} 
+          color={isFollowed ? Colors.dark.primary : Colors.dark.accent} 
+        />
+        <ThemedText style={[styles.speciesText, isFollowed && styles.speciesTextFollowed]}>
+          {species}
+        </ThemedText>
+      </Pressable>
+    );
+  };
 
   const LocationChip = ({ location }: { location: string }) => (
     <View style={styles.locationChip}>
@@ -302,6 +391,35 @@ export default function FilmDetailsScreen() {
             <ThemedText style={styles.sectionTitle}>Synopsis</ThemedText>
             <ThemedText style={styles.synopsis}>{film.synopsis}</ThemedText>
           </View>
+
+          {videos.length > 0 ? (
+            <View style={styles.section}>
+              <ThemedText style={styles.sectionTitle}>Trailers & Videos</ThemedText>
+              <View style={styles.videosContainer}>
+                {videos.map((video) => (
+                  <Pressable
+                    key={video.id}
+                    style={({ pressed }) => [
+                      styles.videoButton,
+                      pressed && styles.videoButtonPressed,
+                    ]}
+                    onPress={() => handleWatchTrailer(video.key)}
+                  >
+                    <View style={styles.videoIcon}>
+                      <Feather name="play" size={20} color={Colors.dark.accent} />
+                    </View>
+                    <View style={styles.videoInfo}>
+                      <ThemedText style={styles.videoName} numberOfLines={1}>
+                        {video.name}
+                      </ThemedText>
+                      <ThemedText style={styles.videoType}>{video.type}</ThemedText>
+                    </View>
+                    <Feather name="external-link" size={16} color={Colors.dark.textSecondary} />
+                  </Pressable>
+                ))}
+              </View>
+            </View>
+          ) : null}
 
           {film.species.length > 0 ? (
             <View style={styles.section}>
@@ -389,6 +507,57 @@ export default function FilmDetailsScreen() {
                 size={32}
               />
             </View>
+          </View>
+
+          <View style={styles.section}>
+            <View style={styles.notesTitleRow}>
+              <ThemedText style={styles.sectionTitle}>Personal Notes</ThemedText>
+              {!isEditingNotes && userNotes ? (
+                <Pressable onPress={() => setIsEditingNotes(true)}>
+                  <Feather name="edit-2" size={18} color={Colors.dark.accent} />
+                </Pressable>
+              ) : null}
+            </View>
+            {isEditingNotes ? (
+              <View style={styles.notesInputContainer}>
+                <TextInput
+                  style={styles.notesInput}
+                  value={userNotes}
+                  onChangeText={setUserNotes}
+                  placeholder="Add your thoughts about this film..."
+                  placeholderTextColor={Colors.dark.textSecondary}
+                  multiline
+                  numberOfLines={4}
+                  textAlignVertical="top"
+                />
+                <View style={styles.notesButtonRow}>
+                  <Pressable 
+                    style={styles.notesCancelButton}
+                    onPress={() => setIsEditingNotes(false)}
+                  >
+                    <ThemedText style={styles.notesCancelText}>Cancel</ThemedText>
+                  </Pressable>
+                  <Pressable 
+                    style={styles.notesSaveButton}
+                    onPress={handleSaveNotes}
+                  >
+                    <ThemedText style={styles.notesSaveText}>Save</ThemedText>
+                  </Pressable>
+                </View>
+              </View>
+            ) : userNotes ? (
+              <View style={styles.notesDisplay}>
+                <ThemedText style={styles.notesText}>{userNotes}</ThemedText>
+              </View>
+            ) : (
+              <Pressable 
+                style={styles.addNotesButton}
+                onPress={() => setIsEditingNotes(true)}
+              >
+                <Feather name="plus" size={18} color={Colors.dark.accent} />
+                <ThemedText style={styles.addNotesText}>Add notes</ThemedText>
+              </Pressable>
+            )}
           </View>
 
           {watched ? (
@@ -675,5 +844,117 @@ const styles = StyleSheet.create({
   },
   watchedButtonActive: {
     backgroundColor: Colors.dark.backgroundSecondary,
+  },
+  speciesChipFollowed: {
+    backgroundColor: "rgba(26, 77, 46, 0.3)",
+    borderWidth: 1,
+    borderColor: Colors.dark.primary,
+  },
+  speciesTextFollowed: {
+    color: Colors.dark.primary,
+  },
+  videosContainer: {},
+  videoButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: Colors.dark.backgroundDefault,
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.md,
+    borderRadius: BorderRadius.md,
+    marginBottom: Spacing.sm,
+  },
+  videoButtonPressed: {
+    backgroundColor: Colors.dark.backgroundSecondary,
+  },
+  videoIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "rgba(212, 175, 55, 0.15)",
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: Spacing.md,
+  },
+  videoInfo: {
+    flex: 1,
+  },
+  videoName: {
+    fontSize: 15,
+    color: "#FFFFFF",
+    fontWeight: "500",
+  },
+  videoType: {
+    fontSize: 12,
+    color: Colors.dark.textSecondary,
+    marginTop: 2,
+  },
+  notesTitleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: Spacing.md,
+  },
+  notesInputContainer: {
+    backgroundColor: Colors.dark.backgroundDefault,
+    borderRadius: BorderRadius.md,
+    padding: Spacing.md,
+  },
+  notesInput: {
+    color: "#FFFFFF",
+    fontSize: 15,
+    lineHeight: 22,
+    minHeight: 100,
+    textAlignVertical: "top",
+  },
+  notesButtonRow: {
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    marginTop: Spacing.md,
+    gap: Spacing.sm,
+  },
+  notesCancelButton: {
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.sm,
+  },
+  notesCancelText: {
+    color: Colors.dark.textSecondary,
+    fontSize: 14,
+  },
+  notesSaveButton: {
+    backgroundColor: Colors.dark.accent,
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.sm,
+    borderRadius: BorderRadius.md,
+  },
+  notesSaveText: {
+    color: Colors.dark.backgroundRoot,
+    fontSize: 14,
+    fontWeight: "600",
+  },
+  notesDisplay: {
+    backgroundColor: Colors.dark.backgroundDefault,
+    borderRadius: BorderRadius.md,
+    padding: Spacing.lg,
+  },
+  notesText: {
+    fontSize: 15,
+    lineHeight: 22,
+    color: "#FFFFFF",
+  },
+  addNotesButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: Colors.dark.backgroundDefault,
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.md,
+    borderRadius: BorderRadius.md,
+    borderWidth: 1,
+    borderColor: Colors.dark.backgroundSecondary,
+    borderStyle: "dashed",
+  },
+  addNotesText: {
+    fontSize: 14,
+    color: Colors.dark.accent,
+    marginLeft: Spacing.sm,
   },
 });

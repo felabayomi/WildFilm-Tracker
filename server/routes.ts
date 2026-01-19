@@ -216,6 +216,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get film trailers from TMDB
+  app.get("/api/films/:tmdbId/videos", async (req: Request, res: Response) => {
+    const apiKey = process.env.TMDB_API_KEY;
+    const { tmdbId } = req.params;
+    
+    if (!apiKey) {
+      return res.status(503).json({ error: "TMDB API key not configured" });
+    }
+
+    try {
+      const url = `${TMDB_BASE_URL}/movie/${tmdbId}/videos?api_key=${apiKey}`;
+      const response = await fetch(url);
+      
+      if (!response.ok) {
+        throw new Error(`TMDB API error: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      
+      // Filter for YouTube trailers and teasers
+      const videos = (data.results || [])
+        .filter((v: any) => 
+          v.site === "YouTube" && 
+          (v.type === "Trailer" || v.type === "Teaser" || v.type === "Clip")
+        )
+        .map((v: any) => ({
+          id: v.id,
+          key: v.key,
+          name: v.name,
+          type: v.type,
+          site: v.site,
+        }))
+        .slice(0, 5); // Limit to 5 videos
+      
+      res.json({ videos });
+    } catch (error) {
+      console.error("TMDB videos error:", error);
+      res.status(500).json({ error: "Failed to fetch videos" });
+    }
+  });
+
   // Get top-rated wildlife documentaries for Featured section
   app.get("/api/films/featured", async (req: Request, res: Response) => {
     const apiKey = process.env.TMDB_API_KEY;

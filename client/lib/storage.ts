@@ -17,6 +17,7 @@ const STORAGE_KEYS = {
   WATCHLIST_FILMS_DATA: "watchlist_films_data",
   USER_PROFILE: "user_profile",
   USER_PREFERENCES: "user_preferences",
+  FAVORITE_SPECIES: "favorite_species",
 };
 
 export interface UserPreferences {
@@ -310,8 +311,49 @@ export async function clearAllData(): Promise<void> {
       STORAGE_KEYS.WATCHLIST_FILMS_DATA,
       STORAGE_KEYS.FAVORITE_SOURCES,
       STORAGE_KEYS.USER_PROFILE,
+      STORAGE_KEYS.FAVORITE_SPECIES,
     ]);
   } catch (error) {
     console.error("Error clearing all data:", error);
   }
+}
+
+export async function getFavoriteSpecies(): Promise<string[]> {
+  try {
+    const data = await AsyncStorage.getItem(STORAGE_KEYS.FAVORITE_SPECIES);
+    return data ? JSON.parse(data) : [];
+  } catch (error) {
+    console.error("Error getting favorite species:", error);
+    return [];
+  }
+}
+
+export async function toggleFavoriteSpecies(species: string): Promise<boolean> {
+  try {
+    const speciesList = await getFavoriteSpecies();
+    const normalizedSpecies = species.toLowerCase().trim();
+    const index = speciesList.findIndex(s => s.toLowerCase() === normalizedSpecies);
+    
+    if (index > -1) {
+      speciesList.splice(index, 1);
+      await AsyncStorage.setItem(STORAGE_KEYS.FAVORITE_SPECIES, JSON.stringify(speciesList));
+      return false;
+    } else {
+      speciesList.push(species);
+      await AsyncStorage.setItem(STORAGE_KEYS.FAVORITE_SPECIES, JSON.stringify(speciesList));
+      return true;
+    }
+  } catch (error) {
+    console.error("Error toggling favorite species:", error);
+    return false;
+  }
+}
+
+export async function isSpeciesFavorite(species: string): Promise<boolean> {
+  const speciesList = await getFavoriteSpecies();
+  return speciesList.some(s => s.toLowerCase() === species.toLowerCase().trim());
+}
+
+export async function updateUserNotes(filmId: string, notes: string): Promise<void> {
+  await setUserFilmData(filmId, { userNotes: notes });
 }
