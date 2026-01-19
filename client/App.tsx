@@ -4,7 +4,7 @@ import { NavigationContainer } from "@react-navigation/native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import { SafeAreaProvider } from "react-native-safe-area-context";
-import { StatusBar } from "expo-status-bar";
+import { ThemeAwareStatusBar } from "@/components/ThemeAwareStatusBar";
 import * as SplashScreen from "expo-splash-screen";
 import {
   useFonts,
@@ -49,7 +49,7 @@ export default function App() {
                 <NavigationContainer>
                   <RootStackNavigator />
                 </NavigationContainer>
-                <StatusBar style="light" />
+                <ThemeAwareStatusBar />
               </KeyboardProvider>
             </GestureHandlerRootView>
           </SafeAreaProvider>
