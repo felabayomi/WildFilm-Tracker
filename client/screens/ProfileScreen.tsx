@@ -246,7 +246,7 @@ export default function ProfileScreen() {
         <View style={styles.menuSection}>
           <ThemedText style={styles.menuTitle}>Settings</ThemedText>
           <View style={styles.menuContainer}>
-            <MenuButton icon="heart" label="Favorite Sources" />
+            <MenuButton icon="sliders" label="Preferences" />
             <MenuButton icon="bell" label="Notifications" />
             <MenuButton icon="shield" label="Privacy" />
             <MenuButton icon="help-circle" label="Help & Support" />
