@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect } from "react";
+import React, { useCallback, useEffect, useMemo } from "react";
 import { StyleSheet, View, FlatList, ScrollView, Pressable, Text, ActivityIndicator, RefreshControl } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useHeaderHeight } from "@react-navigation/elements";
@@ -61,7 +61,11 @@ export default function DiscoverScreen() {
     navigation.navigate("CategoryFilms", { category });
   };
 
-  const heroFilm = featuredFilms[0];
+  const heroFilm = useMemo(() => {
+    if (featuredFilms.length === 0) return null;
+    const randomIndex = Math.floor(Math.random() * featuredFilms.length);
+    return featuredFilms[randomIndex];
+  }, [featuredFilms]);
 
   const renderHero = () => {
     if (localLoading) {
@@ -111,7 +115,6 @@ export default function DiscoverScreen() {
     <View style={styles.section}>
       <SectionHeader 
         title="Featured Films" 
-        subtitle="Award-winning documentaries with verified streaming"
         showSeeAll={false} 
       />
       {localLoading ? (
@@ -150,7 +153,6 @@ export default function DiscoverScreen() {
       <View style={styles.section}>
         <SectionHeader 
           title="All Wildlife Films" 
-          subtitle={totalResults > 0 ? `${totalResults}+ films from TMDB` : undefined}
           showSeeAll={false} 
         />
         {tmdbLoading && tmdbFilms.length === 0 ? (
@@ -292,7 +294,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
   },
   loadMoreText: {
-    color: Colors.dark.background,
+    color: Colors.dark.backgroundRoot,
     fontSize: FontSizes.sm,
     fontWeight: "600",
   },
