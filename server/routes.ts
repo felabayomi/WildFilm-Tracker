@@ -330,6 +330,74 @@ Return ONLY the summary text, nothing else.`
     }
   });
 
+  // Get film details by TMDB ID
+  app.get("/api/films/tmdb/:tmdbId", async (req: Request, res: Response) => {
+    const apiKey = process.env.TMDB_API_KEY;
+    
+    if (!apiKey) {
+      return res.status(503).json({ error: "TMDB API key not configured" });
+    }
+
+    try {
+      const { tmdbId } = req.params;
+      const url = `${TMDB_BASE_URL}/movie/${tmdbId}?api_key=${apiKey}`;
+      
+      const response = await fetch(url);
+      if (!response.ok) {
+        if (response.status === 404) {
+          return res.status(404).json({ error: "Film not found" });
+        }
+        throw new Error(`TMDB API error: ${response.status}`);
+      }
+      
+      const movie = await response.json();
+      
+      const film = {
+        id: `tmdb-${movie.id}`,
+        tmdbId: movie.id,
+        title: movie.title,
+        year: movie.release_date ? parseInt(movie.release_date.split("-")[0]) : 0,
+        synopsis: movie.overview,
+        posterUrl: movie.poster_path 
+          ? `https://image.tmdb.org/t/p/w500${movie.poster_path}`
+          : null,
+        backdropUrl: movie.backdrop_path
+          ? `https://image.tmdb.org/t/p/w1280${movie.backdrop_path}`
+          : null,
+        rating: Math.round(movie.vote_average * 10) / 10,
+        runtime: movie.runtime || 90,
+        director: "Unknown",
+        category: "marine",
+        species: [],
+        locations: [],
+        whereToWatch: [],
+        source: "TMDB",
+        isFeatured: false,
+        isNewRelease: false,
+      };
+
+      // Try to get director from credits
+      try {
+        const creditsUrl = `${TMDB_BASE_URL}/movie/${tmdbId}/credits?api_key=${apiKey}`;
+        const creditsResponse = await fetch(creditsUrl);
+        if (creditsResponse.ok) {
+          const credits = await creditsResponse.json();
+          const director = credits.crew?.find((c: any) => c.job === "Director");
+          if (director) {
+            film.director = director.name;
+          }
+        }
+      } catch (e) {
+        // Ignore credits error
+      }
+
+      res.json({ film });
+    } catch (error) {
+      console.error("TMDB film details error:", error);
+      res.status(500).json({ error: "Failed to fetch film details" });
+    }
+  });
+
   app.get("/api/status", (_req: Request, res: Response) => {
     res.json({ 
       status: "ok",

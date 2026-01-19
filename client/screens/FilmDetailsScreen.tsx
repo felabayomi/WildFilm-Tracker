@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import {
   StyleSheet,
   View,
@@ -7,6 +7,7 @@ import {
   Dimensions,
   Share,
   Platform,
+  ActivityIndicator,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useHeaderHeight } from "@react-navigation/elements";
@@ -26,6 +27,7 @@ import { ThemedText } from "@/components/ThemedText";
 import { Button } from "@/components/Button";
 import { RatingStars } from "@/components/RatingStars";
 import { RootStackParamList } from "@/navigation/RootStackNavigator";
+import { Film } from "@/types/film";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
@@ -49,10 +51,47 @@ export default function FilmDetailsScreen() {
     updateRating,
   } = useFilms();
 
-  const film = getFilmById(filmId);
+  const localFilm = getFilmById(filmId);
   const userData = getFilmUserData(filmId);
   const inWatchlist = isInWatchlist(filmId);
   const watched = isWatched(filmId);
+  
+  const [tmdbFilm, setTmdbFilm] = useState<Film | null>(null);
+  const [isLoadingTMDB, setIsLoadingTMDB] = useState(false);
+  const [tmdbError, setTmdbError] = useState(false);
+
+  // Fetch TMDB film details if local film not found and ID starts with "tmdb-"
+  useEffect(() => {
+    if (!localFilm && filmId.startsWith("tmdb-")) {
+      const tmdbId = filmId.replace("tmdb-", "");
+      setIsLoadingTMDB(true);
+      setTmdbError(false);
+      
+      const fetchTMDBFilm = async () => {
+        try {
+          const baseUrl = getApiUrl();
+          const url = new URL(`/api/films/tmdb/${tmdbId}`, baseUrl);
+          const response = await fetch(url.toString());
+          
+          if (response.ok) {
+            const data = await response.json();
+            setTmdbFilm(data.film);
+          } else {
+            setTmdbError(true);
+          }
+        } catch (error) {
+          console.error("Error fetching TMDB film:", error);
+          setTmdbError(true);
+        } finally {
+          setIsLoadingTMDB(false);
+        }
+      };
+      
+      fetchTMDBFilm();
+    }
+  }, [filmId, localFilm]);
+
+  const film = localFilm || tmdbFilm;
   
   const { providers: realProviders, isLoading: providersLoading } = useWatchProviders(filmId);
 
@@ -60,7 +99,27 @@ export default function FilmDetailsScreen() {
   
   const watchProviders = realProviders.length > 0 ? realProviders : film?.whereToWatch || [];
 
-  if (!film) {
+  if (isLoadingTMDB) {
+    return (
+      <View
+        style={[
+          styles.container,
+          {
+            backgroundColor: theme.backgroundRoot,
+            justifyContent: "center",
+            alignItems: "center",
+          },
+        ]}
+      >
+        <ActivityIndicator size="large" color={Colors.dark.accent} />
+        <ThemedText style={{ marginTop: Spacing.md, color: Colors.dark.textSecondary }}>
+          Loading film details...
+        </ThemedText>
+      </View>
+    );
+  }
+
+  if (!film || tmdbError) {
     return (
       <View
         style={[
