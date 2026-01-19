@@ -91,3 +91,7 @@ The backend provides TMDB integration for wildlife films:
 - **Share Button**: Film details screen has a share button to share films to any app (Messages, WhatsApp, Twitter, etc.)
 - **TMDB Integration**: Backend connected to TMDB API for automatic wildlife film updates
 - **Wildlife Filtering**: API filters for conservation/nature content using specific keywords
+- **Profile Customization**: Edit name, bio, and upload custom profile photo
+- **Preferences Modal**: Dark mode toggle, notifications toggle, and data management options
+- **Data Management**: Clear watch history, clear watchlist, or clear all app data
+- **Film Tracking**: Films Watched count, Time Logged (hours), and Average Rating update dynamically
