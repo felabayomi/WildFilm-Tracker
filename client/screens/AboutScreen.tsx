@@ -110,7 +110,11 @@ export default function AboutScreen() {
           <View style={styles.divider} />
           <InfoRow label="Platform" value="iOS & Android" />
           <View style={styles.divider} />
-          <InfoRow label="Developer" value="WildFilms Team" />
+          <ThemedText style={styles.developerLabel}>Developers</ThemedText>
+          <ThemedText style={styles.developerValue}>WildFilms Team</ThemedText>
+          <ThemedText style={styles.developerValue}>Wildlife of Africa Conservation Initiative</ThemedText>
+          <ThemedText style={styles.developerValue}>A & F Wildlife Foundation</ThemedText>
+          <ThemedText style={styles.developerValue}>A & F Web Technologies</ThemedText>
         </View>
       </View>
 
@@ -271,6 +275,17 @@ const styles = StyleSheet.create({
   divider: {
     height: 1,
     backgroundColor: Colors.dark.backgroundTertiary,
+  },
+  developerLabel: {
+    fontSize: 15,
+    color: Colors.dark.textSecondary,
+    marginTop: Spacing.md,
+    marginBottom: Spacing.sm,
+  },
+  developerValue: {
+    fontSize: 14,
+    color: Colors.dark.text,
+    marginBottom: 4,
   },
   featureItem: {
     flexDirection: "row",
