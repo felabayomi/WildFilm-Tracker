@@ -446,6 +446,165 @@ Return ONLY the summary text, nothing else.`
     });
   });
 
+  // Web-accessible Privacy Policy page for App Store submission
+  app.get("/privacy", (_req: Request, res: Response) => {
+    res.send(`
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Privacy Policy - WildFilms</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0D1F14; color: #E8E8E8; line-height: 1.7; padding: 40px 20px; }
+    .container { max-width: 800px; margin: 0 auto; }
+    h1 { color: #D4AF37; font-size: 2.5rem; margin-bottom: 10px; }
+    h2 { color: #1A4D2E; font-size: 1.5rem; margin: 30px 0 15px; border-bottom: 1px solid #2A5D3E; padding-bottom: 10px; }
+    p { margin-bottom: 15px; color: #B8B8B8; }
+    .date { color: #888; font-size: 0.9rem; margin-bottom: 30px; }
+    ul { margin: 15px 0 15px 25px; color: #B8B8B8; }
+    li { margin-bottom: 8px; }
+    .contact { background: #1A2F1E; padding: 20px; border-radius: 10px; margin-top: 30px; }
+    .contact a { color: #D4AF37; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Privacy Policy</h1>
+    <p class="date">Last updated: January 2026</p>
+    
+    <h2>Introduction</h2>
+    <p>WildFilms is committed to protecting your privacy. This Privacy Policy explains how we collect, use, and safeguard your information when you use our mobile application.</p>
+    
+    <h2>Information We Collect</h2>
+    <p>WildFilms collects minimal data to provide you with the best experience:</p>
+    <ul>
+      <li><strong>Local Data:</strong> Your watchlist, watched films, ratings, notes, and preferences are stored locally on your device only.</li>
+      <li><strong>Profile Information:</strong> Any profile customization (name, bio, photo) is stored locally on your device.</li>
+      <li><strong>Usage Data:</strong> We do not collect analytics or track your usage patterns.</li>
+    </ul>
+    
+    <h2>How We Use Your Information</h2>
+    <p>All your data remains on your device. We use it solely to:</p>
+    <ul>
+      <li>Display your personalized watchlist and viewing history</li>
+      <li>Remember your preferences and settings</li>
+      <li>Show your ratings and notes on films</li>
+    </ul>
+    
+    <h2>Third-Party Services</h2>
+    <p>WildFilms uses The Movie Database (TMDB) API to fetch film information. TMDB's privacy policy applies to data they collect through their service. We do not share your personal data with TMDB or any other third parties.</p>
+    
+    <h2>Data Storage & Security</h2>
+    <p>Your data is stored locally on your device using secure storage mechanisms. We do not transmit your personal data to external servers. No account or login is required to use WildFilms.</p>
+    
+    <h2>Your Rights</h2>
+    <p>You have full control over your data:</p>
+    <ul>
+      <li>Clear your watch history at any time</li>
+      <li>Clear your watchlist at any time</li>
+      <li>Delete all app data through the app settings</li>
+    </ul>
+    
+    <h2>Children's Privacy</h2>
+    <p>WildFilms does not knowingly collect personal information from children under 13. The app is designed for general audiences interested in wildlife documentaries.</p>
+    
+    <h2>Changes to This Policy</h2>
+    <p>We may update this Privacy Policy from time to time. We will notify you of any changes by updating the "Last updated" date.</p>
+    
+    <div class="contact">
+      <h2>Contact Us</h2>
+      <p>If you have questions about this Privacy Policy, please contact us at:</p>
+      <p>Email: <a href="mailto:wildlifefilm@hotmail.com">wildlifefilm@hotmail.com</a></p>
+    </div>
+  </div>
+</body>
+</html>
+    `);
+  });
+
+  // Web-accessible Support page for App Store submission
+  app.get("/support", (_req: Request, res: Response) => {
+    res.send(`
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Support - WildFilms</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0D1F14; color: #E8E8E8; line-height: 1.7; padding: 40px 20px; }
+    .container { max-width: 800px; margin: 0 auto; }
+    h1 { color: #D4AF37; font-size: 2.5rem; margin-bottom: 30px; }
+    h2 { color: #1A4D2E; font-size: 1.5rem; margin: 30px 0 15px; border-bottom: 1px solid #2A5D3E; padding-bottom: 10px; }
+    p { margin-bottom: 15px; color: #B8B8B8; }
+    .contact-box { background: #1A2F1E; padding: 25px; border-radius: 10px; margin: 20px 0; }
+    .contact-box a { color: #D4AF37; font-size: 1.2rem; }
+    .faq { background: #152518; padding: 20px; border-radius: 8px; margin-bottom: 15px; }
+    .faq h3 { color: #E8E8E8; font-size: 1.1rem; margin-bottom: 10px; }
+    .faq p { margin-bottom: 0; }
+    ul { margin: 15px 0 15px 25px; color: #B8B8B8; }
+    li { margin-bottom: 8px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>WildFilms Support</h1>
+    
+    <div class="contact-box">
+      <h2 style="margin-top: 0; border: none;">Contact Us</h2>
+      <p>Have questions or need help? We're here for you!</p>
+      <p>Email: <a href="mailto:wildlifefilm@hotmail.com">wildlifefilm@hotmail.com</a></p>
+      <p>We typically respond within 24-48 hours.</p>
+    </div>
+    
+    <h2>Frequently Asked Questions</h2>
+    
+    <div class="faq">
+      <h3>How do I add a film to my watchlist?</h3>
+      <p>Open any film's details page and tap the "Save" button at the bottom. The film will be added to your Watchlist tab.</p>
+    </div>
+    
+    <div class="faq">
+      <h3>How do I mark a film as watched?</h3>
+      <p>On the film details page, tap "Watched?" to mark it as seen. You can also rate the film using the star rating.</p>
+    </div>
+    
+    <div class="faq">
+      <h3>Where is my data stored?</h3>
+      <p>All your data (watchlist, ratings, notes, preferences) is stored locally on your device. No account is required.</p>
+    </div>
+    
+    <div class="faq">
+      <h3>How do I clear my data?</h3>
+      <p>Go to Profile → Preferences → Data Management. You can clear your watch history, watchlist, or all app data.</p>
+    </div>
+    
+    <div class="faq">
+      <h3>Why can't I find a specific wildlife film?</h3>
+      <p>WildFilms focuses exclusively on wildlife and nature documentaries. Films are sourced from TMDB and filtered for conservation content. If a film isn't appearing, it may not be categorized as a wildlife documentary in our database.</p>
+    </div>
+    
+    <h2>App Features</h2>
+    <ul>
+      <li><strong>Discover:</strong> Browse featured wildlife films and new releases</li>
+      <li><strong>Search:</strong> Find films by title, category, or region</li>
+      <li><strong>Watchlist:</strong> Save films to watch later</li>
+      <li><strong>Film Details:</strong> View trailers, streaming options, and add personal notes</li>
+      <li><strong>Profile:</strong> Track your watching stats and customize preferences</li>
+    </ul>
+    
+    <h2>About WildFilms</h2>
+    <p>WildFilms is dedicated to helping nature enthusiasts discover incredible wildlife documentaries from around the world. Our mission is to connect people with stories that inspire conservation and appreciation for our planet's biodiversity.</p>
+    <p>Film data provided by <a href="https://www.themoviedb.org" style="color: #D4AF37;">The Movie Database (TMDB)</a>.</p>
+  </div>
+</body>
+</html>
+    `);
+  });
+
   const httpServer = createServer(app);
 
   return httpServer;
