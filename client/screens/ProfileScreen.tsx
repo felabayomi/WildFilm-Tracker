@@ -285,7 +285,7 @@ export default function ProfileScreen() {
             <MenuButton icon="bell" label="Notifications" onPress={() => profileNavigation.navigate("Notifications")} />
             <MenuButton icon="shield" label="Privacy" onPress={() => profileNavigation.navigate("Privacy")} />
             <MenuButton icon="help-circle" label="Help & Support" onPress={() => profileNavigation.navigate("HelpSupport")} />
-            <MenuButton icon="info" label="About WildFilms" />
+            <MenuButton icon="info" label="About WildFilms" onPress={() => profileNavigation.navigate("About")} />
           </View>
         </View>
 

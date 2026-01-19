@@ -5,6 +5,7 @@ import ProfileScreen from "@/screens/ProfileScreen";
 import NotificationsScreen from "@/screens/NotificationsScreen";
 import PrivacyScreen from "@/screens/PrivacyScreen";
 import HelpSupportScreen from "@/screens/HelpSupportScreen";
+import AboutScreen from "@/screens/AboutScreen";
 import { useScreenOptions } from "@/hooks/useScreenOptions";
 
 export type ProfileStackParamList = {
@@ -12,6 +13,7 @@ export type ProfileStackParamList = {
   Notifications: undefined;
   Privacy: undefined;
   HelpSupport: undefined;
+  About: undefined;
 };
 
 const Stack = createNativeStackNavigator<ProfileStackParamList>();
@@ -47,6 +49,13 @@ export default function ProfileStackNavigator() {
         component={HelpSupportScreen}
         options={{
           headerTitle: "Help & Support",
+        }}
+      />
+      <Stack.Screen
+        name="About"
+        component={AboutScreen}
+        options={{
+          headerTitle: "About WildFilms",
         }}
       />
     </Stack.Navigator>
