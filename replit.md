@@ -73,3 +73,21 @@ client/
 ## Running the App
 - Frontend runs on port 8081 (Expo)
 - Backend runs on port 5000 (Express)
+
+## API Endpoints
+The backend provides TMDB integration for wildlife films:
+
+- `GET /api/films/discover` - Fetches wildlife & conservation documentaries
+  - Filters by: wildlife, nature documentary, wildlife conservation, endangered species, safari, ocean, jungle, rainforest, polar
+  - Returns: films with title, year, synopsis, poster, rating
+  
+- `GET /api/films/search?q=query` - Search documentaries by title
+
+- `GET /api/films/:tmdbId/watch-providers` - Get streaming platforms for a film
+
+- `GET /api/status` - Check API status and TMDB configuration
+
+## Features Added
+- **Share Button**: Film details screen has a share button to share films to any app (Messages, WhatsApp, Twitter, etc.)
+- **TMDB Integration**: Backend connected to TMDB API for automatic wildlife film updates
+- **Wildlife Filtering**: API filters for conservation/nature content using specific keywords
