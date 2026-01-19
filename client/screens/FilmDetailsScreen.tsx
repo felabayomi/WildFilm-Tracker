@@ -20,6 +20,7 @@ import * as WebBrowser from "expo-web-browser";
 import { useTheme } from "@/hooks/useTheme";
 import { useFilms } from "@/hooks/useFilmData";
 import { useWatchProviders } from "@/hooks/useWatchProviders";
+import { getApiUrl } from "@/lib/query-client";
 import { Colors, Spacing, BorderRadius } from "@/constants/theme";
 import { ThemedText } from "@/components/ThemedText";
 import { Button } from "@/components/Button";
@@ -114,11 +115,10 @@ export default function FilmDetailsScreen() {
     let summary = "";
     
     try {
-      const baseUrl = process.env.EXPO_PUBLIC_DOMAIN 
-        ? `https://${process.env.EXPO_PUBLIC_DOMAIN}` 
-        : "http://localhost:5000";
+      const baseUrl = getApiUrl();
+      const url = new URL("/api/films/generate-share-summary", baseUrl);
       
-      const response = await fetch(`${baseUrl}/api/films/generate-share-summary`, {
+      const response = await fetch(url.toString(), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -133,7 +133,7 @@ export default function FilmDetailsScreen() {
         summary = data.summary;
       }
     } catch (error) {
-      console.log("AI summary generation failed, using fallback");
+      console.log("AI summary generation failed, using fallback:", error);
     }
     
     if (!summary) {
