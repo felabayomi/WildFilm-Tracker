@@ -284,7 +284,7 @@ export default function ProfileScreen() {
             <MenuButton icon="sliders" label="Preferences" onPress={() => setIsPreferencesModalVisible(true)} />
             <MenuButton icon="bell" label="Notifications" onPress={() => profileNavigation.navigate("Notifications")} />
             <MenuButton icon="shield" label="Privacy" onPress={() => profileNavigation.navigate("Privacy")} />
-            <MenuButton icon="help-circle" label="Help & Support" />
+            <MenuButton icon="help-circle" label="Help & Support" onPress={() => profileNavigation.navigate("HelpSupport")} />
             <MenuButton icon="info" label="About WildFilms" />
           </View>
         </View>
