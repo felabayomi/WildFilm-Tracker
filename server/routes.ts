@@ -24,7 +24,27 @@ const WILDLIFE_KEYWORDS = [
 ].join("|"); // OR logic - matches films with any of these keywords
 
 // Wildlife terms for text-based filtering
-const WILDLIFE_TERMS = ['animal', 'wildlife', 'ocean', 'sea', 'marine', 'jungle', 'rainforest', 'safari', 'polar', 'arctic', 'elephant', 'lion', 'tiger', 'whale', 'dolphin', 'bird', 'fish', 'shark', 'bear', 'wolf', 'gorilla', 'chimpanzee', 'octopus', 'coral', 'reef', 'forest', 'nature', 'planet earth', 'conservation', 'endangered', 'species', 'predator', 'prey', 'ecosystem', 'serengeti', 'amazon', 'african', 'penguin', 'monkey', 'ape'];
+const WILDLIFE_TERMS = ['animal', 'wildlife', 'ocean', 'marine', 'jungle', 'rainforest', 'safari', 'polar', 'arctic', 'elephant', 'lion', 'tiger', 'whale', 'dolphin', 'shark', 'bear', 'gorilla', 'chimpanzee', 'octopus', 'coral', 'reef', 'nature', 'planet earth', 'conservation', 'endangered', 'predator', 'prey', 'ecosystem', 'serengeti', 'amazon', 'african', 'penguin', 'monkey', 'ape', 'wolves', 'birds', 'fish', 'species'];
+
+// Check if text contains wildlife terms as standalone words (not part of names)
+function hasWildlifeContent(text: string): boolean {
+  const lowerText = text.toLowerCase();
+  // Check for obvious wildlife phrases first
+  const wildlifePhrases = ['wildlife', 'wild life', 'nature documentary', 'animal', 'endangered species', 'conservation', 'ecosystem', 'habitat'];
+  if (wildlifePhrases.some(phrase => lowerText.includes(phrase))) return true;
+  
+  // For animal names, use word boundaries to avoid matching person names like "Patrick Wolf"
+  const animalPatterns = [
+    /\bwolves?\b/, /\blions?\b/, /\btigers?\b/, /\bwhales?\b/, /\bdolphins?\b/, 
+    /\belephants?\b/, /\bsharks?\b/, /\bbears?\b/, /\bgorillas?\b/, /\bpenguins?\b/,
+    /\bchimpanzees?\b/, /\boctopus\b/, /\bseals?\b/, /\bjaguars?\b/, /\bpandas?\b/
+  ];
+  if (animalPatterns.some(pattern => pattern.test(lowerText))) return true;
+  
+  // Check for nature/wildlife terms
+  const natureTerms = ['ocean', 'marine', 'jungle', 'rainforest', 'safari', 'polar', 'arctic', 'coral', 'reef', 'serengeti', 'amazon', 'african savanna'];
+  return natureTerms.some(term => lowerText.includes(term));
+}
 
 // Valid regions for filtering
 const VALID_REGIONS = [
@@ -50,33 +70,39 @@ async function detectRegionsWithAI(title: string, synopsis: string): Promise<str
       messages: [
         {
           role: "system",
-          content: `You are a wildlife documentary expert. Based on the film title and synopsis, determine which geographic regions the documentary is about.
+          content: `You are a wildlife documentary expert. Determine the geographic regions where this wildlife documentary was filmed or is primarily about.
 
-ONLY return regions from this exact list (return the exact spelling):
-- North America (includes USA, Mexico, Central America)
-- South America (includes Brazil, Peru, Ecuador, Argentina, etc.)
-- Canada
-- Africa
-- Antarctica
-- Arctic (includes polar regions, Greenland, Svalbard)
-- Asia (includes China, Japan, India, Southeast Asia, Russia)
-- Australia (includes New Zealand, Papua New Guinea)
-- Europe
-- Pacific Ocean (includes Hawaii, Polynesia, Pacific islands)
-- Atlantic Ocean (includes Caribbean)
-- Indian Ocean (includes Maldives, Seychelles)
+Return regions from this EXACT list (use exact spelling):
+- North America (USA, Mexico, Central America - wolves, grizzly bears, bison, cougars, bald eagles)
+- Canada (Canadian wilderness - wolves, polar bears, moose, caribou)
+- South America (Amazon, Andes, Galapagos - jaguars, sloths, macaws, piranhas)
+- Africa (Serengeti, Congo, Sahara - lions, elephants, gorillas, rhinos, zebras)
+- Antarctica (penguins, seals, whales near Antarctica)
+- Arctic (polar bears, arctic foxes, walruses, narwhals)
+- Asia (tigers, pandas, snow leopards, orangutans, elephants in India/China/Southeast Asia)
+- Australia (kangaroos, koalas, Tasmanian devils, Great Barrier Reef)
+- Europe (wolves returning to Europe, bears in Scandinavia, ibex in Alps)
+- Pacific Ocean (coral reefs, whales, sharks, Hawaii, Polynesia)
+- Atlantic Ocean (Caribbean marine life, Atlantic whales)
+- Indian Ocean (Maldives, Seychelles marine life)
 
-Analyze the title and synopsis for:
-- Mentioned locations, countries, or regions
-- Wildlife species that are native to specific regions (e.g., penguins=Antarctica, lions=Africa, bears=North America/Canada, pandas=Asia)
-- Ecosystems that indicate regions (e.g., Amazon=South America, Serengeti=Africa, Great Barrier Reef=Australia)
+SPECIES-TO-REGION MAPPING (use this for detection):
+- Wolves, grizzly bears, black bears, bison, moose, elk, cougars, bald eagles → North America AND/OR Canada
+- Polar bears → Arctic AND/OR Canada
+- Penguins, emperor penguins → Antarctica
+- Lions, elephants, zebras, wildebeest, cheetahs, leopards, hippos, rhinos, gorillas → Africa
+- Tigers, pandas, snow leopards, orangutans, komodo dragons → Asia
+- Kangaroos, koalas, platypus, Tasmanian devils → Australia
+- Jaguars, sloths, macaws, anacondas, piranhas → South America
+- Whales, dolphins, sharks (in general) → Multiple ocean regions
 
-Return a JSON array of matching regions. If you can't determine any regions, return an empty array.
-Example: ["Africa", "Asia"]`
+Be generous with assignments - if a species is mentioned, include ALL regions where it lives.
+Return JSON: {"regions": ["Region1", "Region2"]}
+If truly uncertain, return {"regions": []}`
         },
         {
           role: "user",
-          content: `Title: ${title}\n\nSynopsis: ${synopsis}`
+          content: `Title: ${title}\n\nSynopsis: ${synopsis || "No synopsis available"}`
         }
       ],
       response_format: { type: "json_object" },
@@ -88,7 +114,9 @@ Example: ["Africa", "Asia"]`
     const regions = parsed.regions || parsed.locations || [];
     
     // Filter to only valid regions
-    return regions.filter((r: string) => VALID_REGIONS.includes(r));
+    const validRegions = regions.filter((r: string) => VALID_REGIONS.includes(r));
+    console.log(`AI regions for "${title}": ${JSON.stringify(validRegions)}`);
+    return validRegions;
   } catch (error) {
     console.error("AI region detection error:", error);
     return [];
@@ -96,11 +124,13 @@ Example: ["Africa", "Asia"]`
 }
 
 // Cache for AI region detection to avoid repeated API calls
+// Cache is cleared on server restart to pick up prompt improvements
 const regionCache = new Map<string, string[]>();
 
 async function getRegionsForFilm(id: string, title: string, synopsis: string): Promise<string[]> {
   const cacheKey = `${id}`;
   if (regionCache.has(cacheKey)) {
+    console.log(`Cache hit for "${title}": ${JSON.stringify(regionCache.get(cacheKey))}`);
     return regionCache.get(cacheKey)!;
   }
   
@@ -164,10 +194,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const data: TMDBResponse = await response.json();
       
-      // Filter to ensure wildlife content
+      // Filter to ensure wildlife content using smart matching
       const filteredResults = data.results.filter(movie => {
-        const text = (movie.title + ' ' + movie.overview).toLowerCase();
-        return WILDLIFE_TERMS.some(term => text.includes(term));
+        return hasWildlifeContent(movie.overview || "");
       });
       
       // Use AI to detect regions for each film (with caching)
@@ -234,11 +263,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const data: TMDBResponse = await response.json();
       
-      // Filter for documentaries AND wildlife content
+      // Filter for documentaries with ACTUAL wildlife content
+      // Uses smart matching to avoid false positives like person names
       const wildlifeDocumentaries = data.results.filter(movie => {
         if (!movie.genre_ids.includes(DOCUMENTARY_GENRE_ID)) return false;
-        const text = (movie.title + ' ' + movie.overview).toLowerCase();
-        return WILDLIFE_TERMS.some(term => text.includes(term));
+        return hasWildlifeContent(movie.overview || "");
       });
 
       // Use AI to detect regions for each film (with caching)
@@ -399,10 +428,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const data: TMDBResponse = await response.json();
       
-      // Filter to ensure wildlife content - check title/synopsis for wildlife terms
+      // Filter to ensure wildlife content using smart matching
       const filteredFilms = data.results.filter(movie => {
-        const text = (movie.title + ' ' + movie.overview).toLowerCase();
-        return WILDLIFE_TERMS.some(term => text.includes(term));
+        return hasWildlifeContent(movie.overview || "");
       });
       
       // Take top 6 highest-rated films
