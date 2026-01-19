@@ -1,5 +1,11 @@
 import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "node:http";
+import OpenAI from "openai";
+
+const openai = new OpenAI({
+  apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
+  baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
+});
 
 const TMDB_BASE_URL = "https://api.themoviedb.org/3";
 const DOCUMENTARY_GENRE_ID = 99;
@@ -275,6 +281,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("TMDB featured films error:", error);
       res.status(500).json({ error: "Failed to fetch featured films from TMDB" });
+    }
+  });
+
+  app.post("/api/films/generate-share-summary", async (req: Request, res: Response) => {
+    try {
+      const { title, synopsis, streamingServices } = req.body;
+
+      if (!title || !synopsis) {
+        return res.status(400).json({ error: "Title and synopsis required" });
+      }
+
+      const streamingText = streamingServices?.length > 0 
+        ? `Available on: ${streamingServices.join(", ")}`
+        : "";
+
+      const response = await openai.chat.completions.create({
+        model: "gpt-4o-mini",
+        messages: [
+          {
+            role: "system",
+            content: `You are a social media copywriter for a wildlife film app. Create compelling, complete share text for films. Rules:
+- Maximum 120 characters for the summary (excluding title)
+- Must be a COMPLETE sentence, never end with "..."
+- Make it emotionally engaging and create urgency to watch
+- Focus on what makes this film special
+- Use vivid, action-oriented language`
+          },
+          {
+            role: "user",
+            content: `Create a share summary for this wildlife film:
+Title: ${title}
+Synopsis: ${synopsis}
+
+Return ONLY the summary text, nothing else.`
+          }
+        ],
+        max_tokens: 60,
+        temperature: 0.7,
+      });
+
+      const summary = response.choices[0]?.message?.content?.trim() || synopsis.substring(0, 100);
+
+      res.json({ summary });
+    } catch (error) {
+      console.error("Error generating share summary:", error);
+      res.status(500).json({ error: "Failed to generate summary" });
     }
   });
 

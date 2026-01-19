@@ -111,11 +111,38 @@ export default function FilmDetailsScreen() {
   const handleShare = useCallback(async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     
-    const synopsisTruncated = film.synopsis.length > 100 
-      ? `${film.synopsis.substring(0, 100)}...` 
-      : film.synopsis;
+    let summary = "";
     
-    let shareMessage = `Check out "${film.title}" - ${synopsisTruncated}`;
+    try {
+      const baseUrl = process.env.EXPO_PUBLIC_DOMAIN 
+        ? `https://${process.env.EXPO_PUBLIC_DOMAIN}` 
+        : "http://localhost:5000";
+      
+      const response = await fetch(`${baseUrl}/api/films/generate-share-summary`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: film.title,
+          synopsis: film.synopsis,
+          streamingServices: watchProviders.filter(s => s.type === "stream").map(s => s.name),
+        }),
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        summary = data.summary;
+      }
+    } catch (error) {
+      console.log("AI summary generation failed, using fallback");
+    }
+    
+    if (!summary) {
+      summary = film.synopsis.length > 100 
+        ? `${film.synopsis.substring(0, 97)}...` 
+        : film.synopsis;
+    }
+    
+    let shareMessage = `Check out "${film.title}" - ${summary}`;
     
     const streamingSources = watchProviders.filter(s => s.type === "stream");
     if (streamingSources.length > 0) {
