@@ -142,7 +142,7 @@ export default function FilmDetailsScreen() {
   }, []);
 
   const film = localFilm || tmdbFilm;
-  const watchProviders = realProviders.length > 0 ? realProviders : film?.whereToWatch || [];
+  const watchProviders = realProviders;
 
   // All hooks must be called before any conditional returns
   const handleWatchlistToggle = useCallback(async () => {
