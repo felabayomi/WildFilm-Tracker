@@ -10,7 +10,10 @@
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.wildlifefilms.app"
+      "bundleIdentifier": "com.wildlifefilms.app",
+      "infoPlist": {
+        "UIBackgroundModes": []
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -38,7 +41,14 @@
           }
         }
       ],
-      "expo-web-browser"
+      "expo-web-browser",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/images/icon.png",
+          "color": "#D4AF37"
+        }
+      ]
     ],
     "experiments": {
       "reactCompiler": true
