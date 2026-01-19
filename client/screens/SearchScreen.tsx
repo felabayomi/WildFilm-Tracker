@@ -1,5 +1,5 @@
-import React, { useState, useMemo, useCallback } from "react";
-import { StyleSheet, View, FlatList, ScrollView } from "react-native";
+import React, { useState, useMemo, useCallback, useEffect, useRef } from "react";
+import { StyleSheet, View, FlatList, ScrollView, ActivityIndicator } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 import { useNavigation } from "@react-navigation/native";
@@ -7,6 +7,7 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 
 import { useTheme } from "@/hooks/useTheme";
 import { useFilms } from "@/hooks/useFilmData";
+import { getApiUrl } from "@/lib/query-client";
 import { Colors, Spacing } from "@/constants/theme";
 import { SearchInput } from "@/components/SearchInput";
 import { FilterChip } from "@/components/FilterChip";
@@ -16,6 +17,16 @@ import { ThemedText } from "@/components/ThemedText";
 import { CATEGORIES, REGIONS, SOURCES } from "@/data/films";
 import { Film, FilmCategory } from "@/types/film";
 import { RootStackParamList } from "@/navigation/RootStackNavigator";
+
+interface TMDBFilm {
+  id: string;
+  tmdbId: number;
+  title: string;
+  year: number;
+  synopsis: string;
+  posterUrl: string | null;
+  rating: number;
+}
 
 export default function SearchScreen() {
   const insets = useSafeAreaInsets();
@@ -29,6 +40,9 @@ export default function SearchScreen() {
   const [selectedCategories, setSelectedCategories] = useState<FilmCategory[]>([]);
   const [selectedRegions, setSelectedRegions] = useState<string[]>([]);
   const [selectedSources, setSelectedSources] = useState<string[]>([]);
+  const [tmdbResults, setTmdbResults] = useState<TMDBFilm[]>([]);
+  const [isSearchingTMDB, setIsSearchingTMDB] = useState(false);
+  const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const toggleCategory = (category: FilmCategory) => {
     setSelectedCategories((prev) =>
@@ -60,7 +74,53 @@ export default function SearchScreen() {
     setSelectedSources([]);
   };
 
-  const filteredFilms = useMemo(() => {
+  const searchTMDB = useCallback(async (query: string) => {
+    if (!query.trim() || query.length < 2) {
+      setTmdbResults([]);
+      return;
+    }
+
+    setIsSearchingTMDB(true);
+    try {
+      const baseUrl = getApiUrl();
+      const url = new URL(`/api/films/search?q=${encodeURIComponent(query)}`, baseUrl);
+      const response = await fetch(url.toString());
+      
+      if (response.ok) {
+        const data = await response.json();
+        setTmdbResults(data.films || []);
+      } else {
+        setTmdbResults([]);
+      }
+    } catch (error) {
+      console.log("TMDB search error:", error);
+      setTmdbResults([]);
+    } finally {
+      setIsSearchingTMDB(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
+
+    if (searchQuery.trim().length >= 2) {
+      searchTimeoutRef.current = setTimeout(() => {
+        searchTMDB(searchQuery);
+      }, 500);
+    } else {
+      setTmdbResults([]);
+    }
+
+    return () => {
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current);
+      }
+    };
+  }, [searchQuery, searchTMDB]);
+
+  const filteredLocalFilms = useMemo(() => {
     let result = films;
 
     if (searchQuery.trim()) {
@@ -96,6 +156,36 @@ export default function SearchScreen() {
 
     return result;
   }, [films, searchQuery, selectedCategories, selectedRegions, selectedSources]);
+
+  const convertTMDBToFilm = (tmdbFilm: TMDBFilm): Film => ({
+    id: tmdbFilm.id,
+    title: tmdbFilm.title,
+    year: tmdbFilm.year,
+    synopsis: tmdbFilm.synopsis,
+    posterUrl: tmdbFilm.posterUrl || "",
+    category: "marine" as FilmCategory,
+    director: "Unknown",
+    runtime: 90,
+    rating: tmdbFilm.rating,
+    species: [],
+    locations: [],
+    whereToWatch: [],
+    source: "TMDB",
+    isFeatured: false,
+    isNewRelease: false,
+  });
+
+  const displayFilms = useMemo(() => {
+    if (filteredLocalFilms.length > 0) {
+      return filteredLocalFilms;
+    }
+    if (searchQuery.trim().length >= 2 && tmdbResults.length > 0) {
+      return tmdbResults.map(convertTMDBToFilm);
+    }
+    return filteredLocalFilms;
+  }, [filteredLocalFilms, tmdbResults, searchQuery]);
+
+  const showingTMDBResults = filteredLocalFilms.length === 0 && tmdbResults.length > 0 && searchQuery.trim().length >= 2;
 
   const hasFilters =
     selectedCategories.length > 0 ||
@@ -186,22 +276,47 @@ export default function SearchScreen() {
       </View>
 
       <View style={styles.resultsHeader}>
-        <ThemedText style={styles.resultsCount}>
-          {filteredFilms.length} {filteredFilms.length === 1 ? "film" : "films"} found
-        </ThemedText>
+        {isSearchingTMDB ? (
+          <View style={styles.searchingRow}>
+            <ActivityIndicator size="small" color={Colors.dark.accent} />
+            <ThemedText style={styles.searchingText}>Searching TMDB...</ThemedText>
+          </View>
+        ) : (
+          <View>
+            <ThemedText style={styles.resultsCount}>
+              {displayFilms.length} {displayFilms.length === 1 ? "film" : "films"} found
+            </ThemedText>
+            {showingTMDBResults ? (
+              <ThemedText style={styles.tmdbNote}>Results from TMDB database</ThemedText>
+            ) : null}
+          </View>
+        )}
       </View>
     </View>
   );
 
-  const renderEmpty = () => (
-    <EmptyState
-      image="search"
-      title="No films found"
-      description="Try adjusting your search or filters to discover more wildlife films."
-      actionLabel={hasFilters ? "Clear Filters" : undefined}
-      onAction={hasFilters ? clearFilters : undefined}
-    />
-  );
+  const renderEmpty = () => {
+    if (isSearchingTMDB) {
+      return (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={Colors.dark.accent} />
+          <ThemedText style={styles.loadingText}>Searching wildlife films...</ThemedText>
+        </View>
+      );
+    }
+    
+    return (
+      <EmptyState
+        image="search"
+        title="No films found"
+        description={searchQuery.trim().length >= 2 
+          ? "No wildlife documentaries match your search. Try different keywords."
+          : "Try adjusting your search or filters to discover more wildlife films."}
+        actionLabel={hasFilters ? "Clear Filters" : undefined}
+        onAction={hasFilters ? clearFilters : undefined}
+      />
+    );
+  };
 
   return (
     <View style={[styles.container, { backgroundColor: theme.backgroundRoot }]}>
@@ -213,7 +328,7 @@ export default function SearchScreen() {
         />
       </View>
       <FlatList
-        data={filteredFilms}
+        data={displayFilms}
         keyExtractor={(item) => item.id}
         ListHeaderComponent={renderFiltersHeader}
         ListEmptyComponent={renderEmpty}
@@ -288,4 +403,29 @@ const styles = StyleSheet.create({
     color: Colors.dark.textSecondary,
   },
   filmCardContainer: {},
+  searchingRow: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  searchingText: {
+    fontSize: 14,
+    color: Colors.dark.textSecondary,
+    marginLeft: Spacing.sm,
+  },
+  tmdbNote: {
+    fontSize: 12,
+    color: Colors.dark.accent,
+    marginTop: 2,
+  },
+  loadingContainer: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: Spacing["2xl"],
+  },
+  loadingText: {
+    fontSize: 14,
+    color: Colors.dark.textSecondary,
+    marginTop: Spacing.md,
+  },
 });
