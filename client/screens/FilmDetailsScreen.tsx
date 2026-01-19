@@ -59,6 +59,11 @@ export default function FilmDetailsScreen() {
   const [tmdbFilm, setTmdbFilm] = useState<Film | null>(null);
   const [isLoadingTMDB, setIsLoadingTMDB] = useState(false);
   const [tmdbError, setTmdbError] = useState(false);
+  const [userRating, setUserRating] = useState(userData?.userRating || 0);
+  
+  // Get TMDB ID for watch providers (works for both local and TMDB films)
+  const tmdbIdForProviders = filmId.startsWith("tmdb-") ? filmId.replace("tmdb-", "") : filmId;
+  const { providers: realProviders, isLoading: providersLoading } = useWatchProviders(tmdbIdForProviders);
 
   // Fetch TMDB film details if local film not found and ID starts with "tmdb-"
   useEffect(() => {
@@ -92,11 +97,6 @@ export default function FilmDetailsScreen() {
   }, [filmId, localFilm]);
 
   const film = localFilm || tmdbFilm;
-  
-  const { providers: realProviders, isLoading: providersLoading } = useWatchProviders(filmId);
-
-  const [userRating, setUserRating] = useState(userData?.userRating || 0);
-  
   const watchProviders = realProviders.length > 0 ? realProviders : film?.whereToWatch || [];
 
   if (isLoadingTMDB) {
