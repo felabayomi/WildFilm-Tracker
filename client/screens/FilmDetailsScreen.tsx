@@ -99,43 +99,7 @@ export default function FilmDetailsScreen() {
   const film = localFilm || tmdbFilm;
   const watchProviders = realProviders.length > 0 ? realProviders : film?.whereToWatch || [];
 
-  if (isLoadingTMDB) {
-    return (
-      <View
-        style={[
-          styles.container,
-          {
-            backgroundColor: theme.backgroundRoot,
-            justifyContent: "center",
-            alignItems: "center",
-          },
-        ]}
-      >
-        <ActivityIndicator size="large" color={Colors.dark.accent} />
-        <ThemedText style={{ marginTop: Spacing.md, color: Colors.dark.textSecondary }}>
-          Loading film details...
-        </ThemedText>
-      </View>
-    );
-  }
-
-  if (!film || tmdbError) {
-    return (
-      <View
-        style={[
-          styles.container,
-          {
-            backgroundColor: theme.backgroundRoot,
-            justifyContent: "center",
-            alignItems: "center",
-          },
-        ]}
-      >
-        <ThemedText>Film not found</ThemedText>
-      </View>
-    );
-  }
-
+  // All hooks must be called before any conditional returns
   const handleWatchlistToggle = useCallback(async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     if (inWatchlist) {
@@ -155,7 +119,7 @@ export default function FilmDetailsScreen() {
     await updateRating(filmId, rating);
   }, [filmId, updateRating]);
 
-  const handleWatchSourcePress = async (url: string) => {
+  const handleWatchSourcePress = useCallback(async (url: string) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     
     if (Platform.OS === 'web') {
@@ -166,9 +130,11 @@ export default function FilmDetailsScreen() {
         controlsColor: Colors.dark.accent,
       });
     }
-  };
+  }, []);
 
   const handleShare = useCallback(async () => {
+    if (!film) return;
+    
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     
     let summary = "";
@@ -226,6 +192,44 @@ export default function FilmDetailsScreen() {
       console.log("Error sharing:", error);
     }
   }, [film, watchProviders]);
+
+  // Conditional returns AFTER all hooks
+  if (isLoadingTMDB) {
+    return (
+      <View
+        style={[
+          styles.container,
+          {
+            backgroundColor: theme.backgroundRoot,
+            justifyContent: "center",
+            alignItems: "center",
+          },
+        ]}
+      >
+        <ActivityIndicator size="large" color={Colors.dark.accent} />
+        <ThemedText style={{ marginTop: Spacing.md, color: Colors.dark.textSecondary }}>
+          Loading film details...
+        </ThemedText>
+      </View>
+    );
+  }
+
+  if (!film || tmdbError) {
+    return (
+      <View
+        style={[
+          styles.container,
+          {
+            backgroundColor: theme.backgroundRoot,
+            justifyContent: "center",
+            alignItems: "center",
+          },
+        ]}
+      >
+        <ThemedText>Film not found</ThemedText>
+      </View>
+    );
+  }
 
   const SpeciesChip = ({ species }: { species: string }) => (
     <View style={styles.speciesChip}>
