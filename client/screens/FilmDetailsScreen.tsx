@@ -519,11 +519,11 @@ export default function FilmDetailsScreen() {
             <ThemedText style={styles.sectionTitle}>Where to Watch</ThemedText>
             {providersLoading ? (
               <ThemedText style={styles.loadingText}>Loading streaming options...</ThemedText>
-            ) : watchProviders.length > 0 ? (
+            ) : watchProviders.length > 0 || manualLinks.length > 0 ? (
               <View style={styles.watchSourcesContainer}>
                 {watchProviders.map((source, index) => (
                   <Pressable
-                    key={index}
+                    key={`provider-${index}`}
                     style={({ pressed }) => [
                       styles.watchSourceButton,
                       pressed && styles.watchSourceButtonPressed,
@@ -553,63 +553,54 @@ export default function FilmDetailsScreen() {
                     />
                   </Pressable>
                 ))}
-              </View>
-            ) : (
-              <ThemedText style={styles.noProvidersText}>
-                No streaming options found for your region
-              </ThemedText>
-            )}
-            
-            {manualLinks.length > 0 ? (
-              <View style={styles.manualLinksSection}>
-                <ThemedText style={styles.manualLinksLabel}>Your Added Links</ThemedText>
-                <View style={styles.watchSourcesContainer}>
-                  {manualLinks.map((link) => (
-                    <View key={link.id} style={styles.manualLinkRow}>
-                      <Pressable
-                        style={({ pressed }) => [
-                          styles.watchSourceButton,
-                          styles.manualLinkButton,
-                          pressed && styles.watchSourceButtonPressed,
-                        ]}
-                        onPress={() => handleWatchSourcePress(link.url)}
-                      >
-                        <Feather
-                          name={
-                            link.type === "stream"
-                              ? "play-circle"
-                              : link.type === "rent"
-                              ? "shopping-cart"
-                              : link.type === "buy"
-                              ? "shopping-bag"
-                              : "gift"
-                          }
-                          size={18}
-                          color={Colors.dark.accent}
-                        />
-                        <ThemedText style={styles.watchSourceLabel}>
-                          {link.name}
-                        </ThemedText>
-                        <View style={styles.manualBadge}>
-                          <ThemedText style={styles.manualBadgeText}>Added</ThemedText>
-                        </View>
-                        <Feather
-                          name="external-link"
-                          size={14}
-                          color={Colors.dark.textSecondary}
-                        />
-                      </Pressable>
+                {manualLinks.map((link) => (
+                  <View key={link.id} style={styles.manualLinkRow}>
+                    <Pressable
+                      style={({ pressed }) => [
+                        styles.watchSourceButton,
+                        styles.manualLinkButton,
+                        pressed && styles.watchSourceButtonPressed,
+                      ]}
+                      onPress={() => handleWatchSourcePress(link.url)}
+                    >
+                      <Feather
+                        name={
+                          link.type === "stream"
+                            ? "play-circle"
+                            : link.type === "rent"
+                            ? "shopping-cart"
+                            : link.type === "buy"
+                            ? "shopping-bag"
+                            : "gift"
+                        }
+                        size={18}
+                        color={Colors.dark.accent}
+                      />
+                      <ThemedText style={styles.watchSourceLabel}>
+                        {link.name}
+                      </ThemedText>
+                      <Feather
+                        name="external-link"
+                        size={14}
+                        color={Colors.dark.textSecondary}
+                      />
+                    </Pressable>
+                    {__DEV__ ? (
                       <Pressable
                         style={styles.removeLinkButton}
                         onPress={() => handleRemoveManualLink(link.id)}
                       >
                         <Feather name="x" size={16} color={Colors.dark.error} />
                       </Pressable>
-                    </View>
-                  ))}
-                </View>
+                    ) : null}
+                  </View>
+                ))}
               </View>
-            ) : null}
+            ) : (
+              <ThemedText style={styles.noProvidersText}>
+                No streaming options found for your region
+              </ThemedText>
+            )}
 
             {isAddingLink ? (
               <View style={styles.addLinkForm}>
