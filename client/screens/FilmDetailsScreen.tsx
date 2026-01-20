@@ -24,7 +24,15 @@ import { useTheme } from "@/hooks/useTheme";
 import { useFilms } from "@/hooks/useFilmData";
 import { useWatchProviders } from "@/hooks/useWatchProviders";
 import { getApiUrl } from "@/lib/query-client";
-import { getFavoriteSpecies, toggleFavoriteSpecies, updateUserNotes } from "@/lib/storage";
+import { 
+  getFavoriteSpecies, 
+  toggleFavoriteSpecies, 
+  updateUserNotes,
+  getManualWatchLinks,
+  addManualWatchLink,
+  removeManualWatchLink,
+  ManualWatchLink,
+} from "@/lib/storage";
 import { Colors, Spacing, BorderRadius } from "@/constants/theme";
 import { ThemedText } from "@/components/ThemedText";
 import { Button } from "@/components/Button";
@@ -75,6 +83,11 @@ export default function FilmDetailsScreen() {
   const [isEditingNotes, setIsEditingNotes] = useState(false);
   const [videos, setVideos] = useState<VideoInfo[]>([]);
   const [favoriteSpeciesList, setFavoriteSpeciesList] = useState<string[]>([]);
+  const [manualLinks, setManualLinks] = useState<ManualWatchLink[]>([]);
+  const [isAddingLink, setIsAddingLink] = useState(false);
+  const [newLinkName, setNewLinkName] = useState("");
+  const [newLinkUrl, setNewLinkUrl] = useState("");
+  const [newLinkType, setNewLinkType] = useState<'stream' | 'rent' | 'buy' | 'free'>('rent');
   
   // Get TMDB ID for watch providers (works for both local and TMDB films)
   const tmdbIdForProviders = filmId.startsWith("tmdb-") ? filmId.replace("tmdb-", "") : filmId;
@@ -141,6 +154,15 @@ export default function FilmDetailsScreen() {
     loadFavoriteSpecies();
   }, []);
 
+  // Load manual watch links
+  useEffect(() => {
+    const loadManualLinks = async () => {
+      const links = await getManualWatchLinks(filmId);
+      setManualLinks(links);
+    };
+    loadManualLinks();
+  }, [filmId]);
+
   const film = localFilm || tmdbFilm;
   const watchProviders = realProviders;
 
@@ -195,6 +217,33 @@ export default function FilmDetailsScreen() {
   const isSpeciesFollowed = useCallback((species: string) => {
     return favoriteSpeciesList.some(s => s.toLowerCase() === species.toLowerCase());
   }, [favoriteSpeciesList]);
+
+  const handleAddManualLink = useCallback(async () => {
+    if (!newLinkName.trim() || !newLinkUrl.trim()) return;
+    
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    try {
+      const link = await addManualWatchLink({
+        filmId,
+        name: newLinkName.trim(),
+        url: newLinkUrl.trim().startsWith('http') ? newLinkUrl.trim() : `https://${newLinkUrl.trim()}`,
+        type: newLinkType,
+      });
+      setManualLinks(prev => [...prev, link]);
+      setNewLinkName("");
+      setNewLinkUrl("");
+      setNewLinkType('rent');
+      setIsAddingLink(false);
+    } catch (error) {
+      console.error("Error adding manual link:", error);
+    }
+  }, [filmId, newLinkName, newLinkUrl, newLinkType]);
+
+  const handleRemoveManualLink = useCallback(async (linkId: string) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    await removeManualWatchLink(linkId);
+    setManualLinks(prev => prev.filter(l => l.id !== linkId));
+  }, []);
 
   const handleWatchSourcePress = useCallback(async (url: string) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -493,6 +542,129 @@ export default function FilmDetailsScreen() {
               <ThemedText style={styles.noProvidersText}>
                 No streaming options found for your region
               </ThemedText>
+            )}
+            
+            {manualLinks.length > 0 ? (
+              <View style={styles.manualLinksSection}>
+                <ThemedText style={styles.manualLinksLabel}>Your Added Links</ThemedText>
+                <View style={styles.watchSourcesContainer}>
+                  {manualLinks.map((link) => (
+                    <View key={link.id} style={styles.manualLinkRow}>
+                      <Pressable
+                        style={({ pressed }) => [
+                          styles.watchSourceButton,
+                          styles.manualLinkButton,
+                          pressed && styles.watchSourceButtonPressed,
+                        ]}
+                        onPress={() => handleWatchSourcePress(link.url)}
+                      >
+                        <Feather
+                          name={
+                            link.type === "stream"
+                              ? "play-circle"
+                              : link.type === "rent"
+                              ? "shopping-cart"
+                              : link.type === "buy"
+                              ? "shopping-bag"
+                              : "gift"
+                          }
+                          size={18}
+                          color={Colors.dark.primary}
+                        />
+                        <ThemedText style={styles.watchSourceLabel}>
+                          {link.name}
+                        </ThemedText>
+                        <View style={styles.manualBadge}>
+                          <ThemedText style={styles.manualBadgeText}>Added</ThemedText>
+                        </View>
+                        <Feather
+                          name="external-link"
+                          size={14}
+                          color={Colors.dark.textSecondary}
+                        />
+                      </Pressable>
+                      <Pressable
+                        style={styles.removeLinkButton}
+                        onPress={() => handleRemoveManualLink(link.id)}
+                      >
+                        <Feather name="x" size={16} color={Colors.dark.error} />
+                      </Pressable>
+                    </View>
+                  ))}
+                </View>
+              </View>
+            ) : null}
+
+            {isAddingLink ? (
+              <View style={styles.addLinkForm}>
+                <TextInput
+                  style={styles.linkInput}
+                  value={newLinkName}
+                  onChangeText={setNewLinkName}
+                  placeholder="Service name (e.g., Fandango)"
+                  placeholderTextColor={Colors.dark.textSecondary}
+                />
+                <TextInput
+                  style={styles.linkInput}
+                  value={newLinkUrl}
+                  onChangeText={setNewLinkUrl}
+                  placeholder="URL (e.g., athome.fandango.com/...)"
+                  placeholderTextColor={Colors.dark.textSecondary}
+                  autoCapitalize="none"
+                  keyboardType="url"
+                />
+                <View style={styles.linkTypeRow}>
+                  {(['stream', 'rent', 'buy', 'free'] as const).map((type) => (
+                    <Pressable
+                      key={type}
+                      style={[
+                        styles.linkTypeChip,
+                        newLinkType === type && styles.linkTypeChipActive,
+                      ]}
+                      onPress={() => setNewLinkType(type)}
+                    >
+                      <ThemedText
+                        style={[
+                          styles.linkTypeText,
+                          newLinkType === type && styles.linkTypeTextActive,
+                        ]}
+                      >
+                        {type.charAt(0).toUpperCase() + type.slice(1)}
+                      </ThemedText>
+                    </Pressable>
+                  ))}
+                </View>
+                <View style={styles.addLinkButtonRow}>
+                  <Pressable
+                    style={styles.cancelLinkButton}
+                    onPress={() => {
+                      setIsAddingLink(false);
+                      setNewLinkName("");
+                      setNewLinkUrl("");
+                    }}
+                  >
+                    <ThemedText style={styles.cancelLinkText}>Cancel</ThemedText>
+                  </Pressable>
+                  <Pressable
+                    style={[
+                      styles.saveLinkButton,
+                      (!newLinkName.trim() || !newLinkUrl.trim()) && styles.saveLinkButtonDisabled,
+                    ]}
+                    onPress={handleAddManualLink}
+                    disabled={!newLinkName.trim() || !newLinkUrl.trim()}
+                  >
+                    <ThemedText style={styles.saveLinkText}>Add Link</ThemedText>
+                  </Pressable>
+                </View>
+              </View>
+            ) : (
+              <Pressable
+                style={styles.addLinkButton}
+                onPress={() => setIsAddingLink(true)}
+              >
+                <Feather name="plus" size={18} color={Colors.dark.accent} />
+                <ThemedText style={styles.addLinkText}>Add streaming link</ThemedText>
+              </Pressable>
             )}
           </View>
 
@@ -956,6 +1128,129 @@ const styles = StyleSheet.create({
     borderStyle: "dashed",
   },
   addNotesText: {
+    fontSize: 14,
+    color: Colors.dark.accent,
+    marginLeft: Spacing.sm,
+  },
+  manualLinksSection: {
+    marginTop: Spacing.lg,
+    borderTopWidth: 1,
+    borderTopColor: Colors.dark.backgroundSecondary,
+    paddingTop: Spacing.lg,
+  },
+  manualLinksLabel: {
+    fontSize: 12,
+    color: Colors.dark.textSecondary,
+    textTransform: "uppercase",
+    letterSpacing: 1,
+    marginBottom: Spacing.sm,
+  },
+  manualLinkRow: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  manualLinkButton: {
+    flex: 1,
+    borderLeftWidth: 3,
+    borderLeftColor: Colors.dark.primary,
+  },
+  manualBadge: {
+    backgroundColor: "rgba(26, 77, 46, 0.3)",
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: 2,
+    borderRadius: BorderRadius.sm,
+    marginRight: Spacing.sm,
+  },
+  manualBadgeText: {
+    fontSize: 10,
+    color: Colors.dark.primary,
+    textTransform: "uppercase",
+  },
+  removeLinkButton: {
+    padding: Spacing.sm,
+    marginLeft: Spacing.xs,
+  },
+  addLinkForm: {
+    backgroundColor: Colors.dark.backgroundDefault,
+    borderRadius: BorderRadius.md,
+    padding: Spacing.md,
+    marginTop: Spacing.md,
+  },
+  linkInput: {
+    backgroundColor: Colors.dark.backgroundSecondary,
+    borderRadius: BorderRadius.md,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    color: "#FFFFFF",
+    fontSize: 15,
+    marginBottom: Spacing.sm,
+  },
+  linkTypeRow: {
+    flexDirection: "row",
+    gap: Spacing.sm,
+    marginBottom: Spacing.md,
+  },
+  linkTypeChip: {
+    flex: 1,
+    alignItems: "center",
+    backgroundColor: Colors.dark.backgroundSecondary,
+    paddingVertical: Spacing.sm,
+    borderRadius: BorderRadius.md,
+  },
+  linkTypeChipActive: {
+    backgroundColor: "rgba(212, 175, 55, 0.2)",
+    borderWidth: 1,
+    borderColor: Colors.dark.accent,
+  },
+  linkTypeText: {
+    fontSize: 12,
+    color: Colors.dark.textSecondary,
+  },
+  linkTypeTextActive: {
+    color: Colors.dark.accent,
+    fontWeight: "600",
+  },
+  addLinkButtonRow: {
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    gap: Spacing.sm,
+  },
+  cancelLinkButton: {
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.sm,
+  },
+  cancelLinkText: {
+    color: Colors.dark.textSecondary,
+    fontSize: 14,
+  },
+  saveLinkButton: {
+    backgroundColor: Colors.dark.accent,
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.sm,
+    borderRadius: BorderRadius.md,
+  },
+  saveLinkButtonDisabled: {
+    opacity: 0.5,
+  },
+  saveLinkText: {
+    color: Colors.dark.backgroundRoot,
+    fontSize: 14,
+    fontWeight: "600",
+  },
+  addLinkButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: Colors.dark.backgroundDefault,
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.md,
+    borderRadius: BorderRadius.md,
+    borderWidth: 1,
+    borderColor: Colors.dark.backgroundSecondary,
+    borderStyle: "dashed",
+    marginTop: Spacing.md,
+  },
+  addLinkText: {
     fontSize: 14,
     color: Colors.dark.accent,
     marginLeft: Spacing.sm,

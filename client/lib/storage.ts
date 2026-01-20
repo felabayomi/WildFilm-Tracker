@@ -357,3 +357,52 @@ export async function isSpeciesFavorite(species: string): Promise<boolean> {
 export async function updateUserNotes(filmId: string, notes: string): Promise<void> {
   await setUserFilmData(filmId, { userNotes: notes });
 }
+
+export interface ManualWatchLink {
+  id: string;
+  filmId: string;
+  name: string;
+  url: string;
+  type: 'stream' | 'rent' | 'buy' | 'free';
+}
+
+const MANUAL_WATCH_LINKS_KEY = "manual_watch_links";
+
+export async function getManualWatchLinks(filmId: string): Promise<ManualWatchLink[]> {
+  try {
+    const data = await AsyncStorage.getItem(MANUAL_WATCH_LINKS_KEY);
+    const allLinks: ManualWatchLink[] = data ? JSON.parse(data) : [];
+    return allLinks.filter(link => link.filmId === filmId);
+  } catch (error) {
+    console.error("Error getting manual watch links:", error);
+    return [];
+  }
+}
+
+export async function addManualWatchLink(link: Omit<ManualWatchLink, 'id'>): Promise<ManualWatchLink> {
+  try {
+    const data = await AsyncStorage.getItem(MANUAL_WATCH_LINKS_KEY);
+    const allLinks: ManualWatchLink[] = data ? JSON.parse(data) : [];
+    const newLink: ManualWatchLink = {
+      ...link,
+      id: `manual-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+    };
+    allLinks.push(newLink);
+    await AsyncStorage.setItem(MANUAL_WATCH_LINKS_KEY, JSON.stringify(allLinks));
+    return newLink;
+  } catch (error) {
+    console.error("Error adding manual watch link:", error);
+    throw error;
+  }
+}
+
+export async function removeManualWatchLink(linkId: string): Promise<void> {
+  try {
+    const data = await AsyncStorage.getItem(MANUAL_WATCH_LINKS_KEY);
+    const allLinks: ManualWatchLink[] = data ? JSON.parse(data) : [];
+    const filtered = allLinks.filter(link => link.id !== linkId);
+    await AsyncStorage.setItem(MANUAL_WATCH_LINKS_KEY, JSON.stringify(filtered));
+  } catch (error) {
+    console.error("Error removing manual watch link:", error);
+  }
+}

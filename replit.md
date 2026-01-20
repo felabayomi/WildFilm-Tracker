@@ -98,6 +98,7 @@ The backend provides TMDB integration for wildlife films:
 - **Push Notifications**: Dedicated Notifications screen with push notification settings for new films and watchlist reminders
 - **Privacy Screen**: Privacy policy, terms of service, and data usage documentation
 - **Help & Support Screen**: App usage guide, FAQ section, and contact email (wildlifefilm@hotmail.com)
+- **Manual Watch Links**: Add your own verified streaming/purchase links for films when TMDB doesn't have them (e.g., Fandango, regional services). Links are stored locally with type (stream/rent/buy/free) and can be removed.
 - **About WildFilms Screen**: App info, version, features highlight, TMDB attribution, and support contact
 - **Film Trailers**: Watch trailers and videos directly from film details via YouTube integration
 - **Personal Notes**: Add and edit private notes/reviews on any film, stored locally per film
