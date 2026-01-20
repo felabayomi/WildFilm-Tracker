@@ -585,7 +585,7 @@ export default function FilmDetailsScreen() {
                               : "gift"
                           }
                           size={18}
-                          color={Colors.dark.primary}
+                          color={Colors.dark.accent}
                         />
                         <ThemedText style={styles.watchSourceLabel}>
                           {link.name}
@@ -1200,7 +1200,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.sm,
     color: "#FFFFFF",
-    fontSize: 15,
+    fontSize: 16,
     marginBottom: Spacing.sm,
   },
   linkTypeLabel: {
