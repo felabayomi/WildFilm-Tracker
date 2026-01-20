@@ -87,7 +87,7 @@ export default function FilmDetailsScreen() {
   const [isAddingLink, setIsAddingLink] = useState(false);
   const [newLinkName, setNewLinkName] = useState("");
   const [newLinkUrl, setNewLinkUrl] = useState("");
-  const [newLinkType, setNewLinkType] = useState<'stream' | 'rent' | 'buy' | 'free'>('rent');
+  const [newLinkTypes, setNewLinkTypes] = useState<Set<'stream' | 'rent' | 'buy' | 'free'>>(new Set(['rent']));
   
   // Get TMDB ID for watch providers (works for both local and TMDB films)
   const tmdbIdForProviders = filmId.startsWith("tmdb-") ? filmId.replace("tmdb-", "") : filmId;
@@ -219,25 +219,41 @@ export default function FilmDetailsScreen() {
   }, [favoriteSpeciesList]);
 
   const handleAddManualLink = useCallback(async () => {
-    if (!newLinkName.trim() || !newLinkUrl.trim()) return;
+    if (!newLinkName.trim() || !newLinkUrl.trim() || newLinkTypes.size === 0) return;
     
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     try {
+      const typesArray = Array.from(newLinkTypes);
+      const typeLabel = typesArray.length > 1 
+        ? typesArray.map(t => t.charAt(0).toUpperCase() + t.slice(1)).join('/')
+        : typesArray[0];
       const link = await addManualWatchLink({
         filmId,
         name: newLinkName.trim(),
         url: newLinkUrl.trim().startsWith('http') ? newLinkUrl.trim() : `https://${newLinkUrl.trim()}`,
-        type: newLinkType,
+        type: typesArray[0],
       });
       setManualLinks(prev => [...prev, link]);
       setNewLinkName("");
       setNewLinkUrl("");
-      setNewLinkType('rent');
+      setNewLinkTypes(new Set(['rent']));
       setIsAddingLink(false);
     } catch (error) {
       console.error("Error adding manual link:", error);
     }
-  }, [filmId, newLinkName, newLinkUrl, newLinkType]);
+  }, [filmId, newLinkName, newLinkUrl, newLinkTypes]);
+
+  const toggleLinkType = useCallback((type: 'stream' | 'rent' | 'buy' | 'free') => {
+    setNewLinkTypes(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(type)) {
+        newSet.delete(type);
+      } else {
+        newSet.add(type);
+      }
+      return newSet;
+    });
+  }, []);
 
   const handleRemoveManualLink = useCallback(async (linkId: string) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -613,20 +629,21 @@ export default function FilmDetailsScreen() {
                   autoCapitalize="none"
                   keyboardType="url"
                 />
+                <ThemedText style={styles.linkTypeLabel}>Select type(s):</ThemedText>
                 <View style={styles.linkTypeRow}>
                   {(['stream', 'rent', 'buy', 'free'] as const).map((type) => (
                     <Pressable
                       key={type}
                       style={[
                         styles.linkTypeChip,
-                        newLinkType === type && styles.linkTypeChipActive,
+                        newLinkTypes.has(type) && styles.linkTypeChipActive,
                       ]}
-                      onPress={() => setNewLinkType(type)}
+                      onPress={() => toggleLinkType(type)}
                     >
                       <ThemedText
                         style={[
                           styles.linkTypeText,
-                          newLinkType === type && styles.linkTypeTextActive,
+                          newLinkTypes.has(type) && styles.linkTypeTextActive,
                         ]}
                       >
                         {type.charAt(0).toUpperCase() + type.slice(1)}
@@ -641,6 +658,7 @@ export default function FilmDetailsScreen() {
                       setIsAddingLink(false);
                       setNewLinkName("");
                       setNewLinkUrl("");
+                      setNewLinkTypes(new Set(['rent']));
                     }}
                   >
                     <ThemedText style={styles.cancelLinkText}>Cancel</ThemedText>
@@ -648,16 +666,16 @@ export default function FilmDetailsScreen() {
                   <Pressable
                     style={[
                       styles.saveLinkButton,
-                      (!newLinkName.trim() || !newLinkUrl.trim()) && styles.saveLinkButtonDisabled,
+                      (!newLinkName.trim() || !newLinkUrl.trim() || newLinkTypes.size === 0) && styles.saveLinkButtonDisabled,
                     ]}
                     onPress={handleAddManualLink}
-                    disabled={!newLinkName.trim() || !newLinkUrl.trim()}
+                    disabled={!newLinkName.trim() || !newLinkUrl.trim() || newLinkTypes.size === 0}
                   >
                     <ThemedText style={styles.saveLinkText}>Add Link</ThemedText>
                   </Pressable>
                 </View>
               </View>
-            ) : (
+            ) : __DEV__ ? (
               <Pressable
                 style={styles.addLinkButton}
                 onPress={() => setIsAddingLink(true)}
@@ -665,7 +683,7 @@ export default function FilmDetailsScreen() {
                 <Feather name="plus" size={18} color={Colors.dark.accent} />
                 <ThemedText style={styles.addLinkText}>Add streaming link</ThemedText>
               </Pressable>
-            )}
+            ) : null}
           </View>
 
           <View style={styles.section}>
@@ -1184,6 +1202,11 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     fontSize: 15,
     marginBottom: Spacing.sm,
+  },
+  linkTypeLabel: {
+    fontSize: 12,
+    color: Colors.dark.textSecondary,
+    marginBottom: Spacing.xs,
   },
   linkTypeRow: {
     flexDirection: "row",
