@@ -42,7 +42,7 @@ export function useWatchProviders(filmId: string) {
       const watchSources: WatchSource[] = data.providers.map(p => ({
         name: p.name,
         url: data.link || `https://www.justwatch.com/us/search?q=${encodeURIComponent(p.name)}`,
-        type: p.type as "stream" | "rent" | "buy" | "official",
+        type: p.type as "stream" | "rent" | "buy" | "free" | "official",
       }));
 
       if (watchSources.length === 0 && data.link) {

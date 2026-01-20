@@ -89,9 +89,8 @@ export default function FilmDetailsScreen() {
   const [newLinkUrl, setNewLinkUrl] = useState("");
   const [newLinkTypes, setNewLinkTypes] = useState<Set<'stream' | 'rent' | 'buy' | 'free'>>(new Set(['rent']));
   
-  // Get TMDB ID for watch providers (works for both local and TMDB films)
-  const tmdbIdForProviders = filmId.startsWith("tmdb-") ? filmId.replace("tmdb-", "") : filmId;
-  const { providers: realProviders, isLoading: providersLoading } = useWatchProviders(tmdbIdForProviders);
+  // Get watch providers from TMDB API
+  const { providers: realProviders, isLoading: providersLoading } = useWatchProviders(filmId);
 
   // Fetch TMDB film details if local film not found and ID starts with "tmdb-"
   useEffect(() => {
