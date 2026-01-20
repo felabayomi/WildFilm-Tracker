@@ -662,7 +662,7 @@ const styles = StyleSheet.create({
   },
   stripeGuideNote: {
     fontSize: 12,
-    color: Colors.dark.primary,
+    color: "#7CB97F",
     fontStyle: "italic",
     lineHeight: 18,
   },
