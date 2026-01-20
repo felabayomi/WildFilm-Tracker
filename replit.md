@@ -102,7 +102,7 @@ The backend provides TMDB integration for wildlife films:
 - **Film Trailers**: Watch trailers and videos directly from film details via YouTube integration
 - **Personal Notes**: Add and edit private notes/reviews on any film, stored locally per film
 - **Favorite Species**: Follow species by tapping chips - favorites persist across app sessions
-- **Filmmaker Submission Portal**: Content creators can submit their wildlife films for review via Profile → Submit Your Film. Submissions include film details, media links, filmmaker info, and rights confirmation. Stored in PostgreSQL database with pending/approved/rejected status.
+- **Filmmaker Submission Portal**: Content creators can submit their wildlife films for review via Profile → Submit Your Film. Submissions include film details, media links, filmmaker info, and rights confirmation. Stored in PostgreSQL database with pending/approved/rejected status. Email notifications sent to wildlifefilm@hotmail.com via Resend when new films are submitted.
 
 ## Database Schema
 - **film_submissions**: Stores filmmaker-submitted content (title, year, synopsis, runtime, category, regions, species, poster/trailer/watch URLs, filmmaker info, rights verification, status, timestamps)

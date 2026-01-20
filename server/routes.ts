@@ -1,9 +1,12 @@
 import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "node:http";
 import OpenAI from "openai";
+import { Resend } from "resend";
 import { db } from "./db";
 import { filmSubmissions, insertFilmSubmissionSchema } from "@shared/schema";
 import { eq } from "drizzle-orm";
+
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 const openai = new OpenAI({
   apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
@@ -758,6 +761,58 @@ Return ONLY the summary text, nothing else.`
       const [submission] = await db.insert(filmSubmissions)
         .values(validatedData)
         .returning();
+      
+      // Send email notification to support
+      try {
+        await resend.emails.send({
+          from: "WildFilms <onboarding@resend.dev>",
+          to: "wildlifefilm@hotmail.com",
+          subject: `New Film Submission: ${submission.title}`,
+          html: `
+            <h1>New Wildlife Film Submission</h1>
+            <p>A new film has been submitted for review on WildFilms.</p>
+            
+            <h2>Film Details</h2>
+            <ul>
+              <li><strong>Title:</strong> ${submission.title}</li>
+              <li><strong>Year:</strong> ${submission.year}</li>
+              <li><strong>Category:</strong> ${submission.category}</li>
+              <li><strong>Runtime:</strong> ${submission.runtime ? submission.runtime + ' minutes' : 'Not specified'}</li>
+              <li><strong>Regions:</strong> ${submission.regions || 'Not specified'}</li>
+              <li><strong>Species:</strong> ${submission.species || 'Not specified'}</li>
+            </ul>
+            
+            <h2>Synopsis</h2>
+            <p>${submission.synopsis}</p>
+            
+            <h2>Media Links</h2>
+            <ul>
+              <li><strong>Watch URL:</strong> <a href="${submission.watchUrl}">${submission.watchUrl}</a></li>
+              ${submission.trailerUrl ? `<li><strong>Trailer:</strong> <a href="${submission.trailerUrl}">${submission.trailerUrl}</a></li>` : ''}
+              ${submission.posterUrl ? `<li><strong>Poster:</strong> <a href="${submission.posterUrl}">${submission.posterUrl}</a></li>` : ''}
+            </ul>
+            
+            <h2>Filmmaker Information</h2>
+            <ul>
+              <li><strong>Name:</strong> ${submission.filmmakerName}</li>
+              <li><strong>Email:</strong> ${submission.filmmakerEmail}</li>
+              ${submission.organization ? `<li><strong>Organization:</strong> ${submission.organization}</li>` : ''}
+              ${submission.licenseType ? `<li><strong>License Type:</strong> ${submission.licenseType}</li>` : ''}
+            </ul>
+            
+            <p><strong>Rights Confirmed:</strong> ${submission.hasRights ? 'Yes' : 'No'}</p>
+            <p><strong>Submission ID:</strong> ${submission.id}</p>
+            <p><strong>Submitted:</strong> ${new Date().toLocaleString()}</p>
+            
+            <hr>
+            <p style="color: #888; font-size: 12px;">This is an automated notification from WildFilms.</p>
+          `,
+        });
+        console.log(`Email notification sent for submission: ${submission.title}`);
+      } catch (emailError) {
+        console.error("Failed to send email notification:", emailError);
+        // Don't fail the submission if email fails
+      }
       
       res.status(201).json({
         success: true,
