@@ -21,7 +21,7 @@ export interface Film {
 export interface WatchSource {
   name: string;
   url: string;
-  type: "rent" | "buy" | "stream" | "official";
+  type: "rent" | "buy" | "stream" | "free" | "official";
 }
 
 export type FilmCategory =

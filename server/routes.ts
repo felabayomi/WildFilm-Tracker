@@ -168,6 +168,8 @@ interface TMDBWatchProviders {
   results?: {
     US?: {
       flatrate?: Array<{ provider_name: string; logo_path: string }>;
+      free?: Array<{ provider_name: string; logo_path: string }>;
+      ads?: Array<{ provider_name: string; logo_path: string }>;
       rent?: Array<{ provider_name: string; logo_path: string }>;
       buy?: Array<{ provider_name: string; logo_path: string }>;
       link?: string;
@@ -334,6 +336,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ...(usProviders.flatrate || []).map(p => ({ 
           name: p.provider_name, 
           type: "stream",
+          logo: `https://image.tmdb.org/t/p/w92${p.logo_path}`
+        })),
+        ...(usProviders.free || []).map(p => ({ 
+          name: p.provider_name, 
+          type: "free",
+          logo: `https://image.tmdb.org/t/p/w92${p.logo_path}`
+        })),
+        ...(usProviders.ads || []).map(p => ({ 
+          name: p.provider_name, 
+          type: "free",
           logo: `https://image.tmdb.org/t/p/w92${p.logo_path}`
         })),
         ...(usProviders.rent || []).map(p => ({ 

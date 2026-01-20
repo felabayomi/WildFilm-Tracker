@@ -534,6 +534,8 @@ export default function FilmDetailsScreen() {
                       name={
                         source.type === "stream"
                           ? "play-circle"
+                          : source.type === "free"
+                          ? "gift"
                           : source.type === "rent"
                           ? "shopping-cart"
                           : source.type === "buy"

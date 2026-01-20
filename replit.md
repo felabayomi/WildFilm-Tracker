@@ -83,7 +83,7 @@ The backend provides TMDB integration for wildlife films:
   
 - `GET /api/films/search?q=query` - Search documentaries by title
 
-- `GET /api/films/:tmdbId/watch-providers` - Get streaming platforms for a film
+- `GET /api/films/:tmdbId/watch-providers` - Get streaming platforms for a film (includes subscription, free, ad-supported, rent, and buy options)
 
 - `GET /api/status` - Check API status and TMDB configuration
 
