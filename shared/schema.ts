@@ -37,6 +37,9 @@ export const filmSubmissions = pgTable("film_submissions", {
   posterUrl: text("poster_url"),
   trailerUrl: text("trailer_url"),
   watchUrl: text("watch_url").notNull(), // Where to watch (YouTube, Vimeo, etc.)
+  // Availability/Revenue
+  availabilityTypes: text("availability_types"), // Comma-separated: free, rent, buy, stream
+  streamingService: text("streaming_service"), // Name of streaming service if available
   // Filmmaker info
   filmmakerName: text("filmmaker_name").notNull(),
   filmmakerEmail: text("filmmaker_email").notNull(),

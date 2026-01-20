@@ -72,12 +72,22 @@ export default function SubmitFilmScreen() {
   const [hasRights, setHasRights] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [availabilityTypes, setAvailabilityTypes] = useState<string[]>([]);
+  const [streamingService, setStreamingService] = useState("");
 
   const toggleRegion = (region: string) => {
     setSelectedRegions((prev) =>
       prev.includes(region)
         ? prev.filter((r) => r !== region)
         : [...prev, region]
+    );
+  };
+
+  const toggleAvailability = (type: string) => {
+    setAvailabilityTypes((prev) =>
+      prev.includes(type)
+        ? prev.filter((t) => t !== type)
+        : [...prev, type]
     );
   };
 
@@ -121,6 +131,8 @@ export default function SubmitFilmScreen() {
           posterUrl: posterUrl.trim() || null,
           trailerUrl: trailerUrl.trim() || null,
           watchUrl: watchUrl.trim(),
+          availabilityTypes: availabilityTypes.length > 0 ? availabilityTypes.join(", ") : null,
+          streamingService: streamingService.trim() || null,
           filmmakerName: filmmakerName.trim(),
           filmmakerEmail: filmmakerEmail.trim(),
           organization: organization.trim() || null,
@@ -354,6 +366,59 @@ export default function SubmitFilmScreen() {
       </View>
 
       <View style={styles.section}>
+        <ThemedText style={styles.sectionTitle}>Availability & Revenue</ThemedText>
+        <ThemedText style={styles.sectionHint}>
+          How can viewers access your film? This helps us categorize and potentially monetize your content.
+        </ThemedText>
+        
+        <View style={styles.inputGroup}>
+          <ThemedText style={styles.label}>How is your film available? *</ThemedText>
+          <View style={styles.chipContainer}>
+            {[
+              { id: "free", label: "Free to Watch" },
+              { id: "rent", label: "Rent" },
+              { id: "buy", label: "Purchase/Buy" },
+              { id: "stream", label: "Streaming Service" },
+            ].map((type) => (
+              <Pressable
+                key={type.id}
+                style={[
+                  styles.chip,
+                  availabilityTypes.includes(type.id) && styles.chipSelected,
+                ]}
+                onPress={() => toggleAvailability(type.id)}
+              >
+                <ThemedText
+                  style={[
+                    styles.chipText,
+                    availabilityTypes.includes(type.id) && styles.chipTextSelected,
+                  ]}
+                >
+                  {type.label}
+                </ThemedText>
+              </Pressable>
+            ))}
+          </View>
+          <ThemedText style={styles.hint}>Select all that apply</ThemedText>
+        </View>
+
+        {availabilityTypes.includes("stream") ? (
+          <View style={styles.inputGroup}>
+            <ThemedText style={styles.label}>Streaming Service Name</ThemedText>
+            <TextInput
+              style={styles.input}
+              value={streamingService}
+              onChangeText={setStreamingService}
+              placeholder="e.g., Netflix, Amazon Prime, Vimeo On Demand"
+              placeholderTextColor={Colors.dark.textSecondary}
+              testID="input-streaming-service"
+            />
+            <ThemedText style={styles.hint}>Where can viewers stream your film?</ThemedText>
+          </View>
+        ) : null}
+      </View>
+
+      <View style={styles.section}>
         <ThemedText style={styles.sectionTitle}>Filmmaker Info</ThemedText>
         
         <View style={styles.inputGroup}>
@@ -474,6 +539,12 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.md,
     textTransform: "uppercase",
     letterSpacing: 0.5,
+  },
+  sectionHint: {
+    fontSize: 14,
+    color: Colors.dark.textSecondary,
+    marginBottom: Spacing.md,
+    lineHeight: 20,
   },
   inputGroup: {
     marginBottom: Spacing.md,
