@@ -1,0 +1,301 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Submit Your Film - WildFilms</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Submit your wildlife documentary or nature film to WildFilms. Share your conservation story with our global audience." />
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        margin: 0;
+        padding: 0;
+        background: linear-gradient(135deg, #0D2818 0%, #1A4D2E 50%, #0D2818 100%);
+        color: #fff;
+        min-height: 100vh;
+      }
+      .container {
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 40px 20px;
+      }
+      .header {
+        text-align: center;
+        margin-bottom: 40px;
+      }
+      .logo {
+        width: 80px;
+        height: 80px;
+        background: linear-gradient(135deg, #D4AF37 0%, #F4D03F 100%);
+        border-radius: 20px;
+        margin: 0 auto 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 40px;
+      }
+      h1 {
+        font-size: 32px;
+        font-weight: 700;
+        margin: 0 0 10px;
+        color: #D4AF37;
+      }
+      .subtitle {
+        font-size: 16px;
+        color: rgba(255, 255, 255, 0.8);
+        margin: 0;
+      }
+      .card {
+        background: rgba(255, 255, 255, 0.08);
+        border-radius: 16px;
+        padding: 32px;
+        margin-bottom: 24px;
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(212, 175, 55, 0.2);
+      }
+      .section-title {
+        font-size: 18px;
+        font-weight: 600;
+        color: #D4AF37;
+        margin: 0 0 16px;
+      }
+      .benefits {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+      }
+      .benefits li {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        margin-bottom: 16px;
+        font-size: 15px;
+        color: rgba(255, 255, 255, 0.9);
+      }
+      .benefits li:last-child {
+        margin-bottom: 0;
+      }
+      .check {
+        color: #D4AF37;
+        font-size: 18px;
+        flex-shrink: 0;
+      }
+      .cta-section {
+        text-align: center;
+        margin: 40px 0;
+      }
+      .cta-title {
+        font-size: 20px;
+        font-weight: 600;
+        margin-bottom: 12px;
+      }
+      .cta-text {
+        font-size: 15px;
+        color: rgba(255, 255, 255, 0.7);
+        margin-bottom: 24px;
+      }
+      .app-buttons {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        align-items: center;
+      }
+      .app-link {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        background: linear-gradient(135deg, #D4AF37 0%, #C4A030 100%);
+        color: #0D2818;
+        text-decoration: none;
+        padding: 16px 32px;
+        border-radius: 12px;
+        font-weight: 600;
+        font-size: 16px;
+        transition: transform 0.2s, box-shadow 0.2s;
+        width: 100%;
+        max-width: 300px;
+      }
+      .app-link:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 24px rgba(212, 175, 55, 0.3);
+      }
+      .expo-section {
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 12px;
+        padding: 20px;
+        margin-top: 24px;
+      }
+      .expo-title {
+        font-size: 14px;
+        color: rgba(255, 255, 255, 0.6);
+        margin-bottom: 12px;
+      }
+      .qr-placeholder {
+        background: #fff;
+        border-radius: 8px;
+        padding: 16px;
+        display: inline-block;
+      }
+      .process-steps {
+        counter-reset: steps;
+      }
+      .step {
+        display: flex;
+        gap: 16px;
+        margin-bottom: 20px;
+      }
+      .step:last-child {
+        margin-bottom: 0;
+      }
+      .step-number {
+        width: 32px;
+        height: 32px;
+        background: rgba(212, 175, 55, 0.2);
+        border: 2px solid #D4AF37;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        font-size: 14px;
+        color: #D4AF37;
+        flex-shrink: 0;
+      }
+      .step-content h4 {
+        margin: 0 0 4px;
+        font-size: 16px;
+        color: #fff;
+      }
+      .step-content p {
+        margin: 0;
+        font-size: 14px;
+        color: rgba(255, 255, 255, 0.7);
+      }
+      .footer {
+        text-align: center;
+        padding: 40px 20px;
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 13px;
+      }
+      .footer a {
+        color: #D4AF37;
+        text-decoration: none;
+      }
+      .email-link {
+        color: #D4AF37;
+        text-decoration: none;
+      }
+      @media (max-width: 480px) {
+        .container {
+          padding: 24px 16px;
+        }
+        .card {
+          padding: 24px;
+        }
+        h1 {
+          font-size: 26px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <div class="logo">🎬</div>
+        <h1>Filmmaker Portal</h1>
+        <p class="subtitle">Submit your wildlife documentary to WildFilms</p>
+      </div>
+
+      <div class="card">
+        <h3 class="section-title">Why Submit to WildFilms?</h3>
+        <ul class="benefits">
+          <li>
+            <span class="check">✓</span>
+            <span>Reach a dedicated audience of wildlife and nature enthusiasts</span>
+          </li>
+          <li>
+            <span class="check">✓</span>
+            <span>Set your own rental and purchase prices - keep 100% of revenue</span>
+          </li>
+          <li>
+            <span class="check">✓</span>
+            <span>Direct Stripe integration for instant payments</span>
+          </li>
+          <li>
+            <span class="check">✓</span>
+            <span>Featured placement for quality conservation content</span>
+          </li>
+          <li>
+            <span class="check">✓</span>
+            <span>Join a curated collection of the world's best wildlife films</span>
+          </li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h3 class="section-title">Submission Process</h3>
+        <div class="process-steps">
+          <div class="step">
+            <div class="step-number">1</div>
+            <div class="step-content">
+              <h4>Download WildFilms</h4>
+              <p>Get the app on your mobile device</p>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-number">2</div>
+            <div class="step-content">
+              <h4>Go to Profile</h4>
+              <p>Navigate to the Profile tab and tap "Submit Your Film"</p>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-number">3</div>
+            <div class="step-content">
+              <h4>Complete the Form</h4>
+              <p>Add your film details, pricing, and payment link</p>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-number">4</div>
+            <div class="step-content">
+              <h4>Review & Approval</h4>
+              <p>Our team reviews submissions within 48 hours</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="cta-section">
+        <h3 class="cta-title">Ready to Share Your Story?</h3>
+        <p class="cta-text">Download WildFilms and submit your wildlife documentary today.</p>
+        <div class="app-buttons">
+          <a href="/" class="app-link">
+            <span>📱</span>
+            <span>Get the App</span>
+          </a>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3 class="section-title">Questions?</h3>
+        <p style="margin: 0; color: rgba(255, 255, 255, 0.8); font-size: 15px;">
+          Contact us at <a href="mailto:wildlifefilm@hotmail.com" class="email-link">wildlifefilm@hotmail.com</a> for any questions about the submission process.
+        </p>
+      </div>
+
+      <div class="footer">
+        <p>WildFilms - Discover Wildlife Cinema</p>
+        <p>
+          <a href="/">Home</a> · 
+          <a href="/privacy">Privacy</a> · 
+          <a href="/terms">Terms</a>
+        </p>
+      </div>
+    </div>
+  </body>
+</html>

@@ -168,6 +168,15 @@ function configureExpoAndLanding(app: express.Application) {
     "landing-page.html",
   );
   const landingPageTemplate = fs.readFileSync(templatePath, "utf-8");
+  
+  const filmmakerPortalPath = path.resolve(
+    process.cwd(),
+    "server",
+    "templates",
+    "filmmaker-portal.html",
+  );
+  const filmmakerPortalTemplate = fs.readFileSync(filmmakerPortalPath, "utf-8");
+  
   const appName = getAppName();
 
   log("Serving static Expo files with dynamic manifest routing");
@@ -177,8 +186,14 @@ function configureExpoAndLanding(app: express.Application) {
       return next();
     }
 
-    if (req.path !== "/" && req.path !== "/manifest") {
+    if (req.path !== "/" && req.path !== "/manifest" && req.path !== "/submit") {
       return next();
+    }
+    
+    // Serve filmmaker portal
+    if (req.path === "/submit") {
+      res.setHeader("Content-Type", "text/html; charset=utf-8");
+      return res.status(200).send(filmmakerPortalTemplate);
     }
 
     const platform = req.header("expo-platform");
