@@ -764,6 +764,7 @@ Return ONLY the summary text, nothing else.`
       
       // Send email notification to support
       try {
+        // Send notification to support team
         await resend.emails.send({
           from: "WildFilms <onboarding@resend.dev>",
           to: "wildlifefilm@hotmail.com",
@@ -808,7 +809,84 @@ Return ONLY the summary text, nothing else.`
             <p style="color: #888; font-size: 12px;">This is an automated notification from WildFilms.</p>
           `,
         });
-        console.log(`Email notification sent for submission: ${submission.title}`);
+        console.log(`Admin notification sent for submission: ${submission.title}`);
+        
+        // Send confirmation email to filmmaker
+        await resend.emails.send({
+          from: "WildFilms <onboarding@resend.dev>",
+          to: submission.filmmakerEmail,
+          subject: `Your Film Submission Received - WildFilms`,
+          html: `
+            <!DOCTYPE html>
+            <html>
+            <head>
+              <style>
+                body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #0D1F14; color: #E8E8E8; margin: 0; padding: 0; }
+                .container { max-width: 600px; margin: 0 auto; padding: 40px 20px; }
+                .header { text-align: center; margin-bottom: 30px; }
+                .logo { color: #D4AF37; font-size: 28px; font-weight: bold; }
+                .card { background-color: #1A2F1E; border-radius: 12px; padding: 30px; margin-bottom: 20px; }
+                h1 { color: #D4AF37; font-size: 24px; margin-top: 0; }
+                h2 { color: #1A4D2E; font-size: 18px; margin-top: 25px; border-bottom: 1px solid #2A5D3E; padding-bottom: 8px; }
+                p { color: #B8B8B8; line-height: 1.6; }
+                .highlight { color: #E8E8E8; font-weight: bold; }
+                .details { background-color: #0D1F14; border-radius: 8px; padding: 15px; margin: 15px 0; }
+                .details li { color: #B8B8B8; margin-bottom: 8px; }
+                .details strong { color: #D4AF37; }
+                ul { padding-left: 20px; }
+                .footer { text-align: center; color: #666; font-size: 12px; margin-top: 30px; padding-top: 20px; border-top: 1px solid #2A5D3E; }
+                .footer a { color: #D4AF37; }
+              </style>
+            </head>
+            <body>
+              <div class="container">
+                <div class="header">
+                  <div class="logo">WildFilms</div>
+                </div>
+                
+                <div class="card">
+                  <h1>Thank You for Your Submission!</h1>
+                  
+                  <p>Hi <span class="highlight">${submission.filmmakerName}</span>,</p>
+                  
+                  <p>We've received your submission for <span class="highlight">"${submission.title}"</span> and it's now in our review queue. We're excited to learn more about your wildlife story!</p>
+                  
+                  <h2>What Happens Next</h2>
+                  <ul>
+                    <li>Our team will review your film within <strong>5-7 business days</strong></li>
+                    <li>We'll notify you via email once a decision is made</li>
+                    <li>If approved, your film will be featured in the WildFilms catalogue</li>
+                  </ul>
+                  
+                  <h2>Your Submission Details</h2>
+                  <div class="details">
+                    <ul>
+                      <li><strong>Title:</strong> ${submission.title}</li>
+                      <li><strong>Year:</strong> ${submission.year}</li>
+                      <li><strong>Category:</strong> ${submission.category}</li>
+                      <li><strong>Submission ID:</strong> ${submission.id}</li>
+                    </ul>
+                  </div>
+                  
+                  <p>Keep this email for your records. You can reference your Submission ID if you need to contact us about your submission.</p>
+                  
+                  <p>Questions? Reply to this email or contact us at <a href="mailto:wildlifefilm@hotmail.com" style="color: #D4AF37;">wildlifefilm@hotmail.com</a></p>
+                  
+                  <p>Thank you for sharing your wildlife story with us!</p>
+                  
+                  <p style="margin-top: 25px;">— The WildFilms Team</p>
+                </div>
+                
+                <div class="footer">
+                  <p>This is an automated confirmation from WildFilms.</p>
+                  <p>© ${new Date().getFullYear()} WildFilms. All rights reserved.</p>
+                </div>
+              </div>
+            </body>
+            </html>
+          `,
+        });
+        console.log(`Confirmation email sent to filmmaker: ${submission.filmmakerEmail}`);
       } catch (emailError) {
         console.error("Failed to send email notification:", emailError);
         // Don't fail the submission if email fails
