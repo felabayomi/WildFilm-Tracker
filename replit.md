@@ -104,9 +104,10 @@ The backend provides TMDB integration for wildlife films:
 - **Personal Notes**: Add and edit private notes/reviews on any film, stored locally per film
 - **Favorite Species**: Follow species by tapping chips - favorites persist across app sessions
 - **Filmmaker Submission Portal**: Content creators can submit their wildlife films for review via Profile → Submit Your Film. Submissions include film details, media links, filmmaker info, and rights confirmation. Stored in PostgreSQL database with pending/approved/rejected status. Email notifications sent to wildlifefilm@hotmail.com via Resend when new films are submitted.
+- **Monetization Support**: Filmmakers can set rental/purchase prices and provide Stripe Payment Links when selecting rent/buy availability. Includes step-by-step guidance for setting up Stripe accounts and payment links. All payments go directly to filmmakers - no commission.
 
 ## Database Schema
-- **film_submissions**: Stores filmmaker-submitted content (title, year, synopsis, runtime, category, regions, species, poster/trailer/watch URLs, filmmaker info, rights verification, status, timestamps)
+- **film_submissions**: Stores filmmaker-submitted content (title, year, synopsis, runtime, category, regions, species, poster/trailer/watch URLs, availability types, streaming service, rent/buy prices, Stripe payment link, filmmaker info, rights verification, status, timestamps)
 
 ## Submission API Endpoints
 - `POST /api/submissions` - Submit a new film for review

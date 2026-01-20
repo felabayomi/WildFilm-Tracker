@@ -40,6 +40,9 @@ export const filmSubmissions = pgTable("film_submissions", {
   // Availability/Revenue
   availabilityTypes: text("availability_types"), // Comma-separated: free, rent, buy, stream
   streamingService: text("streaming_service"), // Name of streaming service if available
+  rentPrice: text("rent_price"), // Price to rent (e.g., "4.99")
+  buyPrice: text("buy_price"), // Price to buy (e.g., "14.99")
+  stripePaymentLink: text("stripe_payment_link"), // Stripe Payment Link URL for purchases
   // Filmmaker info
   filmmakerName: text("filmmaker_name").notNull(),
   filmmakerEmail: text("filmmaker_email").notNull(),

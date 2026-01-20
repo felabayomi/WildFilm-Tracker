@@ -74,6 +74,9 @@ export default function SubmitFilmScreen() {
   const [submitted, setSubmitted] = useState(false);
   const [availabilityTypes, setAvailabilityTypes] = useState<string[]>([]);
   const [streamingService, setStreamingService] = useState("");
+  const [rentPrice, setRentPrice] = useState("");
+  const [buyPrice, setBuyPrice] = useState("");
+  const [stripePaymentLink, setStripePaymentLink] = useState("");
 
   const toggleRegion = (region: string) => {
     setSelectedRegions((prev) =>
@@ -133,6 +136,9 @@ export default function SubmitFilmScreen() {
           watchUrl: watchUrl.trim(),
           availabilityTypes: availabilityTypes.length > 0 ? availabilityTypes.join(", ") : null,
           streamingService: streamingService.trim() || null,
+          rentPrice: rentPrice.trim() || null,
+          buyPrice: buyPrice.trim() || null,
+          stripePaymentLink: stripePaymentLink.trim() || null,
           filmmakerName: filmmakerName.trim(),
           filmmakerEmail: filmmakerEmail.trim(),
           organization: organization.trim() || null,
@@ -416,6 +422,68 @@ export default function SubmitFilmScreen() {
             <ThemedText style={styles.hint}>Where can viewers stream your film?</ThemedText>
           </View>
         ) : null}
+
+        {availabilityTypes.includes("rent") ? (
+          <View style={styles.inputGroup}>
+            <ThemedText style={styles.label}>Rental Price (USD) *</ThemedText>
+            <TextInput
+              style={styles.input}
+              value={rentPrice}
+              onChangeText={setRentPrice}
+              placeholder="e.g., 4.99"
+              placeholderTextColor={Colors.dark.textSecondary}
+              keyboardType="decimal-pad"
+              testID="input-rent-price"
+            />
+            <ThemedText style={styles.hint}>How much to rent your film for 48 hours?</ThemedText>
+          </View>
+        ) : null}
+
+        {availabilityTypes.includes("buy") ? (
+          <View style={styles.inputGroup}>
+            <ThemedText style={styles.label}>Purchase Price (USD) *</ThemedText>
+            <TextInput
+              style={styles.input}
+              value={buyPrice}
+              onChangeText={setBuyPrice}
+              placeholder="e.g., 14.99"
+              placeholderTextColor={Colors.dark.textSecondary}
+              keyboardType="decimal-pad"
+              testID="input-buy-price"
+            />
+            <ThemedText style={styles.hint}>How much to purchase your film permanently?</ThemedText>
+          </View>
+        ) : null}
+
+        {(availabilityTypes.includes("rent") || availabilityTypes.includes("buy")) ? (
+          <View style={styles.inputGroup}>
+            <ThemedText style={styles.label}>Stripe Payment Link *</ThemedText>
+            <TextInput
+              style={styles.input}
+              value={stripePaymentLink}
+              onChangeText={setStripePaymentLink}
+              placeholder="e.g., buy.stripe.com/yourlink"
+              placeholderTextColor={Colors.dark.textSecondary}
+              keyboardType="url"
+              autoCapitalize="none"
+              testID="input-stripe-link"
+            />
+            <View style={styles.stripeGuideBox}>
+              <ThemedText style={styles.stripeGuideTitle}>How to set up Stripe Payment Links:</ThemedText>
+              <ThemedText style={styles.stripeGuideText}>
+                1. Create a free account at stripe.com{"\n"}
+                2. Go to Products and create your film product{"\n"}
+                3. Set your price (rental or purchase){"\n"}
+                4. Click "Create payment link"{"\n"}
+                5. Copy the link and paste it above
+              </ThemedText>
+              <ThemedText style={styles.stripeGuideNote}>
+                Once your film is approved, viewers can purchase directly through your Stripe link. 
+                All payments go directly to your Stripe account - WildFilms takes no commission.
+              </ThemedText>
+            </View>
+          </View>
+        ) : null}
       </View>
 
       <View style={styles.section}>
@@ -571,6 +639,32 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: Colors.dark.textSecondary,
     marginTop: Spacing.xs,
+  },
+  stripeGuideBox: {
+    backgroundColor: "rgba(212, 175, 55, 0.1)",
+    borderRadius: BorderRadius.md,
+    padding: Spacing.md,
+    marginTop: Spacing.md,
+    borderWidth: 1,
+    borderColor: "rgba(212, 175, 55, 0.3)",
+  },
+  stripeGuideTitle: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: Colors.dark.accent,
+    marginBottom: Spacing.sm,
+  },
+  stripeGuideText: {
+    fontSize: 13,
+    color: Colors.dark.textSecondary,
+    lineHeight: 20,
+    marginBottom: Spacing.sm,
+  },
+  stripeGuideNote: {
+    fontSize: 12,
+    color: Colors.dark.primary,
+    fontStyle: "italic",
+    lineHeight: 18,
   },
   row: {
     flexDirection: "row",
