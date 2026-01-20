@@ -244,6 +244,30 @@ export const SAMPLE_FILMS: Film[] = [
     rating: 4.8,
     isNewRelease: true,
   },
+  {
+    id: "13",
+    title: "Grizzly Man",
+    year: 2005,
+    runtime: 103,
+    director: "Werner Herzog",
+    synopsis: "A devastating and heart-rending take on grizzly bear activists Timothy Treadwell and Amie Huguenard, who were killed in October of 2003 while living among grizzly bears in Alaska. Werner Herzog's extraordinary documentary explores the fine line between man and nature.",
+    posterUrl: "https://images.unsplash.com/photo-1530595467537-0b5996c41f2d?w=800",
+    category: "predators",
+    species: ["Grizzly Bear", "Brown Bear", "Fox", "Salmon"],
+    locations: ["North America", "Alaska"],
+    conservationTheme: "Wildlife Coexistence",
+    source: "Lions Gate Films",
+    whereToWatch: [
+      { name: "Amazon Prime Video", url: "https://www.amazon.com/Grizzly-Man-Timothy-Treadwell/dp/B001CRNBU8", type: "stream" },
+      { name: "Tubi", url: "https://tubitv.com/movies/grizzly-man", type: "stream" },
+      { name: "Plex", url: "https://watch.plex.tv/movie/grizzly-man", type: "stream" },
+      { name: "PlutoTV", url: "https://pluto.tv/on-demand/movies/grizzly-man", type: "stream" },
+      { name: "Roku Channel", url: "https://therokuchannel.roku.com/details/grizzly-man", type: "stream" },
+    ],
+    rating: 4.7,
+    isFeatured: false,
+    isNewRelease: false,
+  },
 ];
 
 export const COLLECTIONS: Collection[] = [
