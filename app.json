@@ -2,7 +2,7 @@
   "expo": {
     "name": "WildlifeFilms",
     "slug": "wildlifefilms",
-    "version": "1.0.5",
+    "version": "1.0.6",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "wildlifefilms",
@@ -12,7 +12,12 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.wildlifefilms.app",
       "infoPlist": {
-        "UIBackgroundModes": []
+        "UIBackgroundModes": [],
+        "NSCameraUsageDescription": "WildFilms needs camera access to let you take a photo for your profile picture. Your photo will be stored locally on your device and displayed in the app's Profile section.",
+        "NSPhotoLibraryUsageDescription": "WildFilms needs access to your photo library to let you choose an existing photo as your profile picture. Your selected photo will be stored locally and displayed in the app's Profile section.",
+        "NSPhotoLibraryAddUsageDescription": "WildFilms needs permission to save screenshots of your favorite wildlife films to your photo library when you choose to download them.",
+        "NSMicrophoneUsageDescription": "WildFilms may need microphone access if you record video reviews of wildlife documentaries. Audio is only captured when you explicitly start a recording.",
+        "NSUserTrackingUsageDescription": "WildFilms uses this permission to provide personalized wildlife film recommendations based on your viewing history within the app."
       }
     },
     "android": {
