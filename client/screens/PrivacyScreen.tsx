@@ -70,26 +70,40 @@ Local Data Stored:
 - Profile information (name, bio, photo)
 - App preferences (dark mode, notifications)
 
-2. Third-Party Services
+2. Device Permissions
+WildFilms may request the following permissions. Each is optional and only used for specific features:
+
+Camera: Used only to take a photo for your profile picture. Your photo is stored locally on your device and displayed in the Profile section. The camera is never accessed without your explicit action.
+
+Photo Library (Read): Used to let you choose an existing photo as your profile picture. We only access photos you explicitly select.
+
+Photo Library (Save): Used to save screenshots of your favorite wildlife films to your device when you choose to download them.
+
+Microphone: May be used if you record video reviews of wildlife documentaries. Audio is only captured when you explicitly start a recording.
+
+Notifications: Used to send alerts about new wildlife films and watchlist reminders. You control this in Settings.
+
+3. Third-Party Services
 WildFilms uses The Movie Database (TMDB) API to fetch film information. When you browse or search for films, requests are made to TMDB servers. Please refer to TMDB's privacy policy for information about their data practices.
 
-3. Data Security
+4. Data Security
 Since all user data is stored locally on your device:
 - Your data is protected by your device's security
 - No internet connection is required for saved content
 - Your data stays private to your device
+- Profile photos remain on your device only
 
-4. Data Deletion
-You can delete all your data at any time through Settings > Preferences > Clear All Data. Uninstalling the app will also remove all stored data.
+5. Data Deletion
+You can delete all your data at any time through Settings > Preferences > Clear All Data. Uninstalling the app will also remove all stored data including profile photos.
 
-5. Children's Privacy
+6. Children's Privacy
 WildFilms does not knowingly collect information from children under 13. The app is designed for general audiences interested in wildlife documentaries.
 
-6. Changes to This Policy
+7. Changes to This Policy
 We may update this privacy policy from time to time. Changes will be reflected in the "Last updated" date above.
 
-7. Contact Us
-For questions about this privacy policy, please reach out through the Help & Support section in the app.`;
+8. Contact Us
+For questions about this privacy policy, please reach out through the Help & Support section in the app or email wildlifefilm@hotmail.com.`;
 
   const termsOfServiceContent = `Last updated: January 2026
 
@@ -163,8 +177,28 @@ Settings like dark mode and notification preferences are stored to:
 - Remember your preferred app appearance
 - Respect your notification choices
 
+Device Permissions & How They're Used
+
+Camera Access
+WildFilms requests camera access to let you take a photo for your profile picture. Your photo is stored locally on your device and displayed only in the app's Profile section. The camera is never accessed without your explicit action.
+
+Photo Library Access
+WildFilms requests photo library access to let you choose an existing photo as your profile picture. Your selected photo is stored locally and displayed in the app's Profile section. We only access photos you explicitly select.
+
+Photo Library Save Access
+WildFilms may request permission to save images to your photo library when you choose to download screenshots of your favorite wildlife films.
+
+Microphone Access
+WildFilms may request microphone access if you record video reviews of wildlife documentaries. Audio is only captured when you explicitly start a recording. We never access your microphone in the background.
+
+Notifications
+WildFilms may send push notifications about new wildlife films matching your interests and watchlist reminders. You can enable or disable notifications at any time in Settings.
+
+Tracking (iOS)
+WildFilms uses app tracking data only to provide personalized wildlife film recommendations based on your viewing history within the app. We do not share this data with third parties for advertising.
+
 Data Storage Location
-All data is stored locally using AsyncStorage on your device. No data is sent to external servers or cloud services.
+All data is stored locally using AsyncStorage on your device. No personal data is sent to external servers or cloud services. Profile photos remain on your device only.
 
 Data Portability
 Currently, WildFilms does not support data export. Your data remains on your device.

@@ -141,7 +141,7 @@ export default function HelpSupportScreen() {
     },
     {
       question: "How do I change my profile photo?",
-      answer: "Tap on your profile picture in the Profile tab. You'll be prompted to select a new image from your photo library.",
+      answer: "Tap on your profile picture in the Profile tab. You'll be prompted to select a new image from your photo library. Your photo is stored locally on your device only.",
     },
     {
       question: "Does the app work offline?",
@@ -153,11 +153,27 @@ export default function HelpSupportScreen() {
     },
     {
       question: "How do I delete all my data?",
-      answer: "Go to Profile > Preferences and tap 'Clear All Data'. This removes all your watch history, watchlist, ratings, and profile customizations.",
+      answer: "Go to Profile > Preferences and tap 'Clear All Data'. This removes all your watch history, watchlist, ratings, profile photo, and other customizations.",
     },
     {
       question: "Why am I not receiving notifications?",
       answer: "Check that notifications are enabled in Profile > Notifications. Also ensure WildFilms has notification permissions in your device settings.",
+    },
+    {
+      question: "Why does the app ask for camera access?",
+      answer: "WildFilms only requests camera access to let you take a photo for your profile picture. Your photo is stored locally on your device and displayed in the Profile section. The camera is never accessed without your action.",
+    },
+    {
+      question: "Why does the app ask for photo library access?",
+      answer: "WildFilms requests photo library access so you can choose an existing photo as your profile picture. We only access photos you explicitly select, and your chosen photo stays on your device.",
+    },
+    {
+      question: "What data does WildFilms collect?",
+      answer: "WildFilms stores all data locally on your device only. We do not collect, transmit, or store any personal information on external servers. Your watch history, ratings, and profile photo remain private to your device.",
+    },
+    {
+      question: "Is my profile photo uploaded to a server?",
+      answer: "No. Your profile photo is stored locally on your device only. It is never uploaded to any server or shared with anyone.",
     },
   ];
 
