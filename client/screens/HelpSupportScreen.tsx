@@ -6,7 +6,10 @@ import {
   Pressable,
   Modal,
   Linking,
+  Dimensions,
 } from "react-native";
+
+const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useHeaderHeight } from "@react-navigation/elements";
 import { Feather } from "@expo/vector-icons";
@@ -459,8 +462,7 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: BorderRadius.xl,
     borderTopRightRadius: BorderRadius.xl,
     padding: Spacing.xl,
-    maxHeight: "85%",
-    minHeight: 300,
+    height: SCREEN_HEIGHT * 0.85,
   },
   modalHeader: {
     flexDirection: "row",
