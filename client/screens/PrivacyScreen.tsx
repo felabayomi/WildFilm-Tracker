@@ -418,6 +418,7 @@ const styles = StyleSheet.create({
     borderTopRightRadius: BorderRadius.xl,
     padding: Spacing.xl,
     maxHeight: "85%",
+    minHeight: 300,
   },
   modalHeader: {
     flexDirection: "row",
@@ -432,7 +433,8 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
   },
   modalScroll: {
-    flex: 1,
+    flexGrow: 1,
+    flexShrink: 1,
   },
   policyText: {
     fontSize: 14,
