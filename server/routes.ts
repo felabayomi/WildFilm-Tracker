@@ -621,12 +621,16 @@ Return ONLY the summary text, nothing else.`
     .container { max-width: 800px; margin: 0 auto; }
     h1 { color: #D4AF37; font-size: 2.5rem; margin-bottom: 10px; }
     h2 { color: #1A4D2E; font-size: 1.5rem; margin: 30px 0 15px; border-bottom: 1px solid #2A5D3E; padding-bottom: 10px; }
+    h3 { color: #D4AF37; font-size: 1.1rem; margin: 20px 0 10px; }
     p { margin-bottom: 15px; color: #B8B8B8; }
     .date { color: #888; font-size: 0.9rem; margin-bottom: 30px; }
     ul { margin: 15px 0 15px 25px; color: #B8B8B8; }
     li { margin-bottom: 8px; }
+    .permission-card { background: #152518; padding: 20px; border-radius: 10px; margin-bottom: 15px; border-left: 3px solid #1A4D2E; }
+    .permission-card h3 { margin-top: 0; }
     .contact { background: #1A2F1E; padding: 20px; border-radius: 10px; margin-top: 30px; }
     .contact a { color: #D4AF37; }
+    .highlight-box { background: #1A2F1E; padding: 20px; border-radius: 10px; margin: 20px 0; }
   </style>
 </head>
 <body>
@@ -638,34 +642,91 @@ Return ONLY the summary text, nothing else.`
     <p>WildFilms is committed to protecting your privacy. This Privacy Policy explains how we collect, use, and safeguard your information when you use our mobile application.</p>
     
     <h2>Information We Collect</h2>
-    <p>WildFilms collects minimal data to provide you with the best experience:</p>
+    <p>WildFilms stores all your data locally on your device. We do not collect, transmit, or store any personal information on external servers.</p>
     <ul>
-      <li><strong>Local Data:</strong> Your watchlist, watched films, ratings, notes, and preferences are stored locally on your device only.</li>
-      <li><strong>Profile Information:</strong> Any profile customization (name, bio, photo) is stored locally on your device.</li>
-      <li><strong>Usage Data:</strong> We do not collect analytics or track your usage patterns.</li>
+      <li><strong>Watch History:</strong> Your watched films and viewing statistics</li>
+      <li><strong>Watchlist:</strong> Films you save to watch later</li>
+      <li><strong>Ratings & Reviews:</strong> Your film ratings and personal notes</li>
+      <li><strong>Profile Information:</strong> Your name, bio, and profile photo</li>
+      <li><strong>Preferences:</strong> Dark mode, notification settings, favorite species</li>
     </ul>
     
     <h2>How We Use Your Information</h2>
     <p>All your data remains on your device. We use it solely to:</p>
     <ul>
       <li>Display your personalized watchlist and viewing history</li>
+      <li>Show your viewing statistics on your profile</li>
       <li>Remember your preferences and settings</li>
-      <li>Show your ratings and notes on films</li>
+      <li>Display your ratings and notes on films</li>
+      <li>Calculate your average rating score</li>
     </ul>
+    
+    <h2>Device Permissions & How They're Used</h2>
+    <p>WildFilms may request the following permissions. Each is optional and only used for specific features:</p>
+    
+    <div class="permission-card">
+      <h3>Camera Access</h3>
+      <p>WildFilms requests camera access to let you take a photo for your profile picture. Your photo is stored locally on your device and displayed only in the app's Profile section. The camera is never accessed without your explicit action.</p>
+    </div>
+    
+    <div class="permission-card">
+      <h3>Photo Library Access (Read)</h3>
+      <p>WildFilms requests photo library access to let you choose an existing photo as your profile picture. Your selected photo is stored locally and displayed in the app's Profile section. We only access photos you explicitly select.</p>
+    </div>
+    
+    <div class="permission-card">
+      <h3>Photo Library Access (Save)</h3>
+      <p>WildFilms may request permission to save images to your photo library when you choose to download screenshots of your favorite wildlife films.</p>
+    </div>
+    
+    <div class="permission-card">
+      <h3>Microphone Access</h3>
+      <p>WildFilms may request microphone access if you record video reviews of wildlife documentaries. Audio is only captured when you explicitly start a recording. We never access your microphone in the background.</p>
+    </div>
+    
+    <div class="permission-card">
+      <h3>Push Notifications</h3>
+      <p>WildFilms may send push notifications about new wildlife films matching your interests and watchlist reminders. You can enable or disable notifications at any time in Settings.</p>
+    </div>
+    
+    <div class="permission-card">
+      <h3>Tracking (iOS)</h3>
+      <p>WildFilms uses app tracking data only to provide personalized wildlife film recommendations based on your viewing history within the app. We do not share this data with third parties for advertising.</p>
+    </div>
     
     <h2>Third-Party Services</h2>
-    <p>WildFilms uses The Movie Database (TMDB) API to fetch film information. TMDB's privacy policy applies to data they collect through their service. We do not share your personal data with TMDB or any other third parties.</p>
+    <p>WildFilms uses The Movie Database (TMDB) API to fetch film information. When you browse or search for films, requests are made to TMDB servers. Please refer to TMDB's privacy policy for information about their data practices. We do not share your personal data with TMDB or any other third parties.</p>
     
     <h2>Data Storage & Security</h2>
-    <p>Your data is stored locally on your device using secure storage mechanisms. We do not transmit your personal data to external servers. No account or login is required to use WildFilms.</p>
+    <div class="highlight-box">
+      <p>Since all user data is stored locally on your device:</p>
+      <ul>
+        <li>Your data is protected by your device's security</li>
+        <li>No internet connection is required for saved content</li>
+        <li>Your data stays private to your device</li>
+        <li>Profile photos remain on your device only</li>
+        <li>No account or login is required to use WildFilms</li>
+      </ul>
+    </div>
     
-    <h2>Your Rights</h2>
-    <p>You have full control over your data:</p>
+    <h2>Data Retention</h2>
+    <p>Data is retained until you:</p>
     <ul>
-      <li>Clear your watch history at any time</li>
-      <li>Clear your watchlist at any time</li>
-      <li>Delete all app data through the app settings</li>
+      <li>Clear it through Settings > Preferences</li>
+      <li>Uninstall the application</li>
     </ul>
+    
+    <h2>Your Rights & Data Management</h2>
+    <p>You have full control over your data through Settings > Preferences:</p>
+    <ul>
+      <li><strong>Reset Watch History:</strong> Clears all watched films</li>
+      <li><strong>Clear Watchlist:</strong> Removes all saved films</li>
+      <li><strong>Clear All Data:</strong> Removes all app data and resets to defaults</li>
+    </ul>
+    <p>Uninstalling the app will also remove all stored data including profile photos.</p>
+    
+    <h2>Data Portability</h2>
+    <p>Currently, WildFilms does not support data export. Your data remains on your device.</p>
     
     <h2>Children's Privacy</h2>
     <p>WildFilms does not knowingly collect personal information from children under 13. The app is designed for general audiences interested in wildlife documentaries.</p>
