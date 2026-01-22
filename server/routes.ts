@@ -745,6 +745,155 @@ Return ONLY the summary text, nothing else.`
     `);
   });
 
+  // Web-accessible Data Usage page
+  app.get("/data-usage", (_req: Request, res: Response) => {
+    res.send(`
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Data Usage - WildFilms</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0D1F14; color: #E8E8E8; line-height: 1.7; padding: 40px 20px; }
+    .container { max-width: 800px; margin: 0 auto; }
+    h1 { color: #D4AF37; font-size: 2.5rem; margin-bottom: 10px; }
+    h2 { color: #1A4D2E; font-size: 1.5rem; margin: 30px 0 15px; border-bottom: 1px solid #2A5D3E; padding-bottom: 10px; }
+    h3 { color: #D4AF37; font-size: 1.1rem; margin: 20px 0 10px; }
+    p { margin-bottom: 15px; color: #B8B8B8; }
+    .date { color: #888; font-size: 0.9rem; margin-bottom: 30px; }
+    ul { margin: 15px 0 15px 25px; color: #B8B8B8; }
+    li { margin-bottom: 8px; }
+    .data-card { background: #152518; padding: 20px; border-radius: 10px; margin-bottom: 15px; border-left: 3px solid #D4AF37; }
+    .data-card h3 { margin-top: 0; }
+    .permission-card { background: #152518; padding: 20px; border-radius: 10px; margin-bottom: 15px; border-left: 3px solid #1A4D2E; }
+    .permission-card h3 { margin-top: 0; }
+    .highlight-box { background: #1A2F1E; padding: 20px; border-radius: 10px; margin: 20px 0; }
+    .contact { background: #1A2F1E; padding: 20px; border-radius: 10px; margin-top: 30px; }
+    .contact a { color: #D4AF37; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Data Usage</h1>
+    <p class="date">Last updated: January 2026</p>
+    
+    <h2>How Your Data Is Used</h2>
+    
+    <div class="data-card">
+      <h3>Watch History</h3>
+      <p>Your watched films are stored locally to:</p>
+      <ul>
+        <li>Display your viewing statistics</li>
+        <li>Show recently watched films on your profile</li>
+        <li>Calculate your average rating</li>
+      </ul>
+    </div>
+    
+    <div class="data-card">
+      <h3>Watchlist</h3>
+      <p>Films you add to your watchlist are stored to:</p>
+      <ul>
+        <li>Help you remember films to watch later</li>
+        <li>Provide quick access to saved content</li>
+      </ul>
+    </div>
+    
+    <div class="data-card">
+      <h3>Ratings & Reviews</h3>
+      <p>Your film ratings are stored to:</p>
+      <ul>
+        <li>Display your rating on film detail pages</li>
+        <li>Calculate your average rating score</li>
+        <li>Personalize your experience</li>
+      </ul>
+    </div>
+    
+    <div class="data-card">
+      <h3>Profile Information</h3>
+      <p>Your name, bio, and profile photo are stored to:</p>
+      <ul>
+        <li>Personalize your profile page</li>
+        <li>Make the app feel like yours</li>
+      </ul>
+    </div>
+    
+    <div class="data-card">
+      <h3>Preferences</h3>
+      <p>Settings like dark mode and notification preferences are stored to:</p>
+      <ul>
+        <li>Remember your preferred app appearance</li>
+        <li>Respect your notification choices</li>
+      </ul>
+    </div>
+    
+    <h2>Device Permissions & How They're Used</h2>
+    
+    <div class="permission-card">
+      <h3>Camera Access</h3>
+      <p>WildFilms requests camera access to let you take a photo for your profile picture. Your photo is stored locally on your device and displayed only in the app's Profile section. The camera is never accessed without your explicit action.</p>
+    </div>
+    
+    <div class="permission-card">
+      <h3>Photo Library Access</h3>
+      <p>WildFilms requests photo library access to let you choose an existing photo as your profile picture. Your selected photo is stored locally and displayed in the app's Profile section. We only access photos you explicitly select.</p>
+    </div>
+    
+    <div class="permission-card">
+      <h3>Photo Library Save Access</h3>
+      <p>WildFilms may request permission to save images to your photo library when you choose to download screenshots of your favorite wildlife films.</p>
+    </div>
+    
+    <div class="permission-card">
+      <h3>Microphone Access</h3>
+      <p>WildFilms may request microphone access if you record video reviews of wildlife documentaries. Audio is only captured when you explicitly start a recording. We never access your microphone in the background.</p>
+    </div>
+    
+    <div class="permission-card">
+      <h3>Notifications</h3>
+      <p>WildFilms may send push notifications about new wildlife films matching your interests and watchlist reminders. You can enable or disable notifications at any time in Settings.</p>
+    </div>
+    
+    <div class="permission-card">
+      <h3>Tracking (iOS)</h3>
+      <p>WildFilms uses app tracking data only to provide personalized wildlife film recommendations based on your viewing history within the app. We do not share this data with third parties for advertising.</p>
+    </div>
+    
+    <h2>Data Storage Location</h2>
+    <div class="highlight-box">
+      <p>All data is stored locally using AsyncStorage on your device. No personal data is sent to external servers or cloud services. Profile photos remain on your device only.</p>
+    </div>
+    
+    <h2>Data Portability</h2>
+    <p>Currently, WildFilms does not support data export. Your data remains on your device.</p>
+    
+    <h2>Data Retention</h2>
+    <p>Data is retained until you:</p>
+    <ul>
+      <li>Clear it through Settings</li>
+      <li>Uninstall the application</li>
+    </ul>
+    
+    <h2>Managing Your Data</h2>
+    <p>You can manage your data through Settings > Preferences:</p>
+    <ul>
+      <li><strong>Reset Watch History:</strong> Clears all watched films</li>
+      <li><strong>Clear Watchlist:</strong> Removes all saved films</li>
+      <li><strong>Clear All Data:</strong> Removes all app data and resets to defaults</li>
+    </ul>
+    
+    <div class="contact">
+      <h2>Contact Us</h2>
+      <p>If you have questions about how your data is used, please contact us at:</p>
+      <p>Email: <a href="mailto:wildlifefilm@hotmail.com">wildlifefilm@hotmail.com</a></p>
+    </div>
+  </div>
+</body>
+</html>
+    `);
+  });
+
   // Web-accessible Support page for App Store submission
   app.get("/support", (_req: Request, res: Response) => {
     res.send(`
