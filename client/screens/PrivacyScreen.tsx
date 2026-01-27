@@ -197,9 +197,6 @@ WildFilms may request microphone access if you record video reviews of wildlife 
 Notifications
 WildFilms may send push notifications about new wildlife films matching your interests and watchlist reminders. You can enable or disable notifications at any time in Settings.
 
-Tracking (iOS)
-WildFilms uses app tracking data only to provide personalized wildlife film recommendations based on your viewing history within the app. We do not share this data with third parties for advertising.
-
 Data Storage Location
 All data is stored locally using AsyncStorage on your device. No personal data is sent to external servers or cloud services. Profile photos remain on your device only.
 

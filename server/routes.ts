@@ -689,11 +689,6 @@ Return ONLY the summary text, nothing else.`
       <p>WildFilms may send push notifications about new wildlife films matching your interests and watchlist reminders. You can enable or disable notifications at any time in Settings.</p>
     </div>
     
-    <div class="permission-card">
-      <h3>Tracking (iOS)</h3>
-      <p>WildFilms uses app tracking data only to provide personalized wildlife film recommendations based on your viewing history within the app. We do not share this data with third parties for advertising.</p>
-    </div>
-    
     <h2>Third-Party Services</h2>
     <p>WildFilms uses The Movie Database (TMDB) API to fetch film information. When you browse or search for films, requests are made to TMDB servers. Please refer to TMDB's privacy policy for information about their data practices. We do not share your personal data with TMDB or any other third parties.</p>
     
@@ -853,11 +848,6 @@ Return ONLY the summary text, nothing else.`
     <div class="permission-card">
       <h3>Notifications</h3>
       <p>WildFilms may send push notifications about new wildlife films matching your interests and watchlist reminders. You can enable or disable notifications at any time in Settings.</p>
-    </div>
-    
-    <div class="permission-card">
-      <h3>Tracking (iOS)</h3>
-      <p>WildFilms uses app tracking data only to provide personalized wildlife film recommendations based on your viewing history within the app. We do not share this data with third parties for advertising.</p>
     </div>
     
     <h2>Data Storage Location</h2>
