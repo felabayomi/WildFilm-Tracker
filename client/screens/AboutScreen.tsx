@@ -104,21 +104,6 @@ export default function AboutScreen() {
       </View>
 
       <View style={styles.section}>
-        <ThemedText style={styles.sectionTitle}>App Info</ThemedText>
-        <View style={styles.card}>
-          <InfoRow label="Version" value={appVersion} />
-          <View style={styles.divider} />
-          <InfoRow label="Platform" value="iOS & Android" />
-          <View style={styles.divider} />
-          <ThemedText style={styles.developerLabel}>Developers</ThemedText>
-          <ThemedText style={styles.developerValue}>WildFilms Team</ThemedText>
-          <ThemedText style={styles.developerValue}>Wildlife of Africa Conservation Initiative</ThemedText>
-          <ThemedText style={styles.developerValue}>A & F Wildlife Foundation</ThemedText>
-          <ThemedText style={styles.developerValue}>A & F Web Technologies</ThemedText>
-        </View>
-      </View>
-
-      <View style={styles.section}>
         <ThemedText style={styles.sectionTitle}>Features</ThemedText>
         <View style={styles.card}>
           <View style={styles.featureItem}>
@@ -168,6 +153,21 @@ export default function AboutScreen() {
               </ThemedText>
             </View>
           </View>
+        </View>
+      </View>
+
+      <View style={styles.section}>
+        <ThemedText style={styles.sectionTitle}>App Info</ThemedText>
+        <View style={styles.card}>
+          <InfoRow label="Version" value={appVersion} />
+          <View style={styles.divider} />
+          <InfoRow label="Platform" value="iOS & Android" />
+          <View style={styles.divider} />
+          <ThemedText style={styles.developerLabel}>Developers</ThemedText>
+          <ThemedText style={styles.developerValue}>WildFilms Team</ThemedText>
+          <ThemedText style={styles.developerValue}>Wildlife of Africa Conservation Initiative</ThemedText>
+          <ThemedText style={styles.developerValue}>A & F Wildlife Foundation</ThemedText>
+          <ThemedText style={styles.developerValue}>A & F Web Technologies</ThemedText>
         </View>
       </View>
 
