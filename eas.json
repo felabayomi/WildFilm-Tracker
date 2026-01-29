@@ -12,7 +12,11 @@
       "distribution": "internal"
     },
     "production": {
-      "autoIncrement": true
+      "autoIncrement": true,
+      "env": {
+        "EXPO_APPLE_ID": "felixabayomi@live.com",
+        "EXPO_APPLE_TEAM_ID": "PWL5NRKZLG"
+      }
     }
   },
   "submit": {
@@ -22,7 +26,8 @@
         "appleTeamId": "PWL5NRKZLG",
         "ascApiKeyPath": "./AuthKey_382KDZ68UP.p8",
         "ascApiKeyIssuerId": "d222a363-5fd3-43cb-90ef-3cf19e7f97b0",
-        "ascApiKeyId": "382KDZ68UP"
+        "ascApiKeyId": "382KDZ68UP",
+        "appleId": "felixabayomi@live.com"
       }
     }
   }
