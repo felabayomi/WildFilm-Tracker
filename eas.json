@@ -12,8 +12,7 @@
       "distribution": "internal"
     },
     "production": {
-      "autoIncrement": true,
-      "credentialsSource": "remote"
+      "autoIncrement": true
     }
   },
   "submit": {
