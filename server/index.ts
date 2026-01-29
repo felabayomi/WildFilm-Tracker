@@ -196,7 +196,12 @@ function configureExpoAndLanding(app: express.Application) {
       return res.status(200).send(filmmakerPortalTemplate);
     }
 
+    // Redirect root to App Store (except for Expo Go requests)
     const platform = req.header("expo-platform");
+    if (req.path === "/" && !platform) {
+      return res.redirect(301, "https://apps.apple.com/us/app/wildlifefilms/id6758022608");
+    }
+
     if (platform && (platform === "ios" || platform === "android")) {
       return serveExpoManifest(platform, res);
     }
