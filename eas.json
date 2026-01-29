@@ -22,7 +22,10 @@
     "production": {
       "ios": {
         "ascAppId": "6758022608",
-        "appleTeamId": "PWL5NRKZLG"
+        "appleTeamId": "PWL5NRKZLG",
+        "ascApiKeyPath": "./AuthKey_382KDZ68UP.p8",
+        "ascApiKeyIssuerId": "d222a363-5fd3-43cb-90ef-3cf19e7f97b0",
+        "ascApiKeyId": "382KDZ68UP"
       }
     }
   }
