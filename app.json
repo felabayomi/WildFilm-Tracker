@@ -11,6 +11,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.wildlifefilms.app",
+      "appleTeamId": "PWL5NRKZLG",
       "infoPlist": {
         "UIBackgroundModes": [],
         "NSCameraUsageDescription": "WildFilms needs camera access to let you take a photo for your profile picture. Your photo will be stored locally on your device and displayed in the app's Profile section.",
