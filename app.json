@@ -5,12 +5,12 @@
     "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "wildlifefilms",
+    "scheme": "app.replit.wildlifefilms",
     "userInterfaceStyle": "dark",
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.wildlifefilms.app",
+      "bundleIdentifier": "app.replit.wildlifefilms",
       "appleTeamId": "PWL5NRKZLG",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
