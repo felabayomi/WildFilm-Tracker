@@ -13,6 +13,7 @@
       "bundleIdentifier": "com.wildlifefilms.app",
       "appleTeamId": "PWL5NRKZLG",
       "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false,
         "UIBackgroundModes": [],
         "NSCameraUsageDescription": "WildFilms needs camera access to let you take a photo for your profile picture. Your photo will be stored locally on your device and displayed in the app's Profile section.",
         "NSPhotoLibraryUsageDescription": "WildFilms needs access to your photo library to let you choose an existing photo as your profile picture. Your selected photo will be stored locally and displayed in the app's Profile section.",
