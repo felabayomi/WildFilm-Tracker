@@ -8,7 +8,7 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 
 import { useTheme } from "@/hooks/useTheme";
 import { useFilms, cacheFilm } from "@/hooks/useFilmData";
-import { useTMDBFilms, useFeaturedFilms, useNewReleases } from "@/hooks/useTMDBFilms";
+import { useTMDBFilms, useFeaturedFilms } from "@/hooks/useTMDBFilms";
 import { Colors, Spacing, FontSizes } from "@/constants/theme";
 import { FilmPoster } from "@/components/FilmPoster";
 import { CategoryChip } from "@/components/CategoryChip";
@@ -44,32 +44,23 @@ export default function DiscoverScreen() {
     error: featuredError
   } = useFeaturedFilms();
 
-  const {
-    films: newReleaseFilms,
-    isLoading: newReleasesLoading,
-    fetchNewReleases,
-    error: newReleasesError,
-  } = useNewReleases();
-  
   const [refreshing, setRefreshing] = React.useState(false);
 
   useEffect(() => {
     refreshTMDB();
     fetchFeatured();
-    fetchNewReleases();
   }, []);
 
   useEffect(() => {
     tmdbFilms.forEach(film => cacheFilm(film));
     featuredFilms.forEach(film => cacheFilm(film));
-    newReleaseFilms.forEach(film => cacheFilm(film));
-  }, [tmdbFilms, featuredFilms, newReleaseFilms]);
+  }, [tmdbFilms, featuredFilms]);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    await Promise.all([refetchLocal(), refreshTMDB(), fetchFeatured(), fetchNewReleases()]);
+    await Promise.all([refetchLocal(), refreshTMDB(), fetchFeatured()]);
     setRefreshing(false);
-  }, [refetchLocal, refreshTMDB, fetchFeatured, fetchNewReleases]);
+  }, [refetchLocal, refreshTMDB, fetchFeatured]);
 
   const handleFilmPress = (film: Film) => {
     navigation.navigate("FilmDetails", { filmId: film.id });
@@ -166,45 +157,6 @@ export default function DiscoverScreen() {
       )}
     </View>
   );
-
-  const renderNewReleases = () => {
-    if (newReleasesLoading) {
-      return (
-        <View style={styles.section}>
-          <SectionHeader title="New Releases" showSeeAll={false} />
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.horizontalList}>
-            {[1, 2, 3].map((i) => (
-              <FilmPosterSkeleton key={i} size="medium" />
-            ))}
-          </ScrollView>
-        </View>
-      );
-    }
-
-    if (newReleasesError || newReleaseFilms.length === 0) return null;
-
-    return (
-      <View style={styles.section}>
-        <SectionHeader title="New Releases" showSeeAll={false} />
-        <FlatList
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.horizontalList}
-          data={newReleaseFilms}
-          keyExtractor={(item) => item.id}
-          renderItem={({ item }) => (
-            <FilmPoster
-              film={item}
-              size="medium"
-              showYear
-              showRating
-              onPress={() => handleFilmPress(item)}
-            />
-          )}
-        />
-      </View>
-    );
-  };
 
   const renderAllFilms = () => {
     const allFilms = [...SAMPLE_FILMS, ...tmdbFilms];
@@ -310,7 +262,6 @@ export default function DiscoverScreen() {
     >
       {renderHero()}
       {renderCategories()}
-      {renderNewReleases()}
       {renderFeatured()}
       {renderAllFilms()}
     </ScrollView>
