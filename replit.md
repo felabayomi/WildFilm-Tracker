@@ -77,9 +77,17 @@ client/
 ## API Endpoints
 The backend provides TMDB integration for wildlife films:
 
-- `GET /api/films/discover` - Fetches wildlife & conservation documentaries
+- `GET /api/films/discover` - Fetches popular wildlife & conservation documentaries
+  - Sorted by: popularity descending
   - Filters by: wildlife, nature documentary, wildlife conservation, endangered species, safari, ocean, jungle, rainforest, polar
   - Returns: films with title, year, synopsis, poster, rating
+
+- `GET /api/films/new-releases` - Fetches recently released wildlife documentaries (last 18 months)
+  - Sorted by: primary_release_date descending
+  - Same wildlife keyword filters as discover
+  - Returns: up to 10 films with releaseDate field
+
+- `GET /api/films/featured` - Top-rated wildlife documentaries (vote_average.desc, vote_count >= 100)
   
 - `GET /api/films/search?q=query` - Search documentaries by title
 

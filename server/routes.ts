@@ -36,19 +36,27 @@ const WILDLIFE_TERMS = ['animal', 'wildlife', 'ocean', 'marine', 'jungle', 'rain
 function hasWildlifeContent(text: string): boolean {
   const lowerText = text.toLowerCase();
   // Check for obvious wildlife phrases first
-  const wildlifePhrases = ['wildlife', 'wild life', 'nature documentary', 'animal', 'endangered species', 'conservation', 'ecosystem', 'habitat'];
+  const wildlifePhrases = ['wildlife', 'wild life', 'nature documentary', 'animal', 'endangered species', 'conservation', 'ecosystem', 'habitat', 'migration', 'predator', 'prey', 'species'];
   if (wildlifePhrases.some(phrase => lowerText.includes(phrase))) return true;
   
   // For animal names, use word boundaries to avoid matching person names like "Patrick Wolf"
   const animalPatterns = [
     /\bwolves?\b/, /\blions?\b/, /\btigers?\b/, /\bwhales?\b/, /\bdolphins?\b/, 
     /\belephants?\b/, /\bsharks?\b/, /\bbears?\b/, /\bgorillas?\b/, /\bpenguins?\b/,
-    /\bchimpanzees?\b/, /\boctopus\b/, /\bseals?\b/, /\bjaguars?\b/, /\bpandas?\b/
+    /\bchimpanzees?\b/, /\boctopus\b/, /\bseals?\b/, /\bjaguars?\b/, /\bpandas?\b/,
+    /\brhinos?\b/, /\brhinoceros\b/, /\bpangolins?\b/, /\bleopards?\b/, /\bcheetahs?\b/,
+    /\bgiraffes?\b/, /\bzebras?\b/, /\bhippos?\b/, /\bcrocodiles?\b/, /\bsloths?\b/,
+    /\bmonkeys?\b/, /\bapes?\b/, /\borangutans?\b/, /\bkoalas?\b/, /\bkangaroos?\b/,
+    /\bwildlife\b/, /\bseabirds?\b/, /\beagles?\b/, /\bfalcons?\b/, /\bvultures?\b/,
+    /\bmantas?\b/, /\bturtles?\b/, /\bcetaceans?\b/, /\bprimates?\b/, /\bbirds?\b/,
+    /\bbison\b/, /\belks?\b/, /\bmoose\b/, /\bcaribou\b/, /\bwolves?\b/,
+    /\bfoxes?\b/, /\botter\b/, /\bmeerkats?\b/, /\bwarthogs?\b/, /\bimpalas?\b/,
+    /\bpolar\s+bear/, /\bsnow\s+leopard/, /\bgreat\s+white/, /\bhumpback\b/,
   ];
   if (animalPatterns.some(pattern => pattern.test(lowerText))) return true;
   
   // Check for nature/wildlife terms
-  const natureTerms = ['ocean', 'marine', 'jungle', 'rainforest', 'safari', 'polar', 'arctic', 'coral', 'reef', 'serengeti', 'amazon', 'african savanna'];
+  const natureTerms = ['ocean', 'marine', 'jungle', 'rainforest', 'safari', 'polar', 'arctic', 'coral', 'reef', 'serengeti', 'amazon', 'african savanna', 'savanna', 'savannah', 'wetlands', 'wilderness', 'biome', 'naturalist'];
   return natureTerms.some(term => lowerText.includes(term));
 }
 
@@ -475,6 +483,66 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("TMDB featured films error:", error);
       res.status(500).json({ error: "Failed to fetch featured films from TMDB" });
+    }
+  });
+
+  // Get recently released wildlife documentaries
+  app.get("/api/films/new-releases", async (req: Request, res: Response) => {
+    const apiKey = process.env.TMDB_API_KEY;
+
+    if (!apiKey) {
+      return res.status(503).json({
+        error: "TMDB API key not configured",
+      });
+    }
+
+    try {
+      // Pull wildlife docs from the last 18 months sorted by release date descending
+      const cutoffDate = new Date();
+      cutoffDate.setMonth(cutoffDate.getMonth() - 18);
+      const fromDate = cutoffDate.toISOString().split("T")[0];
+      const toDate = new Date().toISOString().split("T")[0];
+
+      const url = `${TMDB_BASE_URL}/discover/movie?api_key=${apiKey}&with_genres=${DOCUMENTARY_GENRE_ID}&with_keywords=${WILDLIFE_KEYWORDS}&sort_by=primary_release_date.desc&primary_release_date.gte=${fromDate}&primary_release_date.lte=${toDate}&vote_count.gte=3&page=1`;
+
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`TMDB API error: ${response.status}`);
+      }
+
+      const data: TMDBResponse = await response.json();
+
+      // For new releases, TMDB keyword filter is strict enough — also check title+overview
+      const filteredFilms = data.results.filter(movie =>
+        hasWildlifeContent(movie.overview || "") || hasWildlifeContent(movie.title || "")
+      );
+
+      // If the TMDB keyword filter returned results but our text check filtered them all,
+      // fall back to the raw keyword-filtered results (trust TMDB keyword tagging)
+      const finalFilms = filteredFilms.length > 0 ? filteredFilms : data.results;
+
+      const films = finalFilms.slice(0, 10).map((movie) => ({
+        id: `tmdb-${movie.id}`,
+        tmdbId: movie.id,
+        title: movie.title,
+        year: movie.release_date ? parseInt(movie.release_date.split("-")[0]) : 0,
+        releaseDate: movie.release_date || null,
+        synopsis: movie.overview,
+        posterUrl: movie.poster_path
+          ? `https://image.tmdb.org/t/p/w500${movie.poster_path}`
+          : null,
+        backdropUrl: movie.backdrop_path
+          ? `https://image.tmdb.org/t/p/w1280${movie.backdrop_path}`
+          : null,
+        rating: Math.round(movie.vote_average * 10) / 10,
+        voteCount: movie.vote_count,
+        isNewRelease: true,
+      }));
+
+      res.json({ films });
+    } catch (error) {
+      console.error("TMDB new releases error:", error);
+      res.status(500).json({ error: "Failed to fetch new releases from TMDB" });
     }
   });
 

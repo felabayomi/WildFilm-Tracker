@@ -173,6 +173,48 @@ export function useFeaturedFilms() {
   };
 }
 
+export function useNewReleases() {
+  const [films, setFilms] = useState<Film[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchNewReleases = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const baseUrl = getApiUrl();
+      const url = new URL("/api/films/new-releases", baseUrl);
+
+      const response = await fetch(url.toString());
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch new releases");
+      }
+
+      const data = await response.json();
+      const mappedFilms = (data.films as (TMDBFilm & { isNewRelease?: boolean })[]).map(f => ({
+        ...mapTMDBToFilm(f),
+        isNewRelease: true,
+      }));
+
+      setFilms(mappedFilms);
+    } catch (err) {
+      console.error("Error fetching new releases:", err);
+      setError(err instanceof Error ? err.message : "Failed to fetch new releases");
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  return {
+    films,
+    isLoading,
+    error,
+    fetchNewReleases,
+  };
+}
+
 export function useTMDBSearch() {
   const [results, setResults] = useState<Film[]>([]);
   const [isSearching, setIsSearching] = useState(false);
