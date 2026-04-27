@@ -1,0 +1,26 @@
+[build]
+  publish = "netlify-public"
+
+[[redirects]]
+  from = "/api/*"
+  to = "https://api.wildfilms.app/api/:splat"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/privacy"
+  to = "https://api.wildfilms.app/privacy"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/submit"
+  to = "https://api.wildfilms.app/submit"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/"
+  to = "https://apps.apple.com/us/app/wildlifefilms/id6758022608"
+  status = 302
+  force = true

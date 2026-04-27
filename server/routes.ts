@@ -6,12 +6,23 @@ import { db } from "./db";
 import { filmSubmissions, insertFilmSubmissionSchema } from "@shared/schema";
 import { eq } from "drizzle-orm";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+const resendApiKey =
+  process.env.WILDLIFE_TRACKER_RESEND_API_KEY || process.env.RESEND_API_KEY;
+const resend = resendApiKey ? new Resend(resendApiKey) : null;
 
 const openai = new OpenAI({
-  apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
-  baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
+  apiKey:
+    process.env.WILDLIFE_TRACKER_AI_INTEGRATIONS_OPENAI_API_KEY ||
+    process.env.OPENAI_API_KEY ||
+    process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
+  baseURL:
+    process.env.WILDLIFE_TRACKER_AI_INTEGRATIONS_OPENAI_BASE_URL ||
+    process.env.OPENAI_BASE_URL ||
+    process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
 });
+
+const tmdbApiKey =
+  process.env.WILDLIFE_TRACKER_TMDB_API_KEY || process.env.TMDB_API_KEY;
 
 const TMDB_BASE_URL = "https://api.themoviedb.org/3";
 const DOCUMENTARY_GENRE_ID = 99;
@@ -38,10 +49,10 @@ function hasWildlifeContent(text: string): boolean {
   // Check for obvious wildlife phrases first
   const wildlifePhrases = ['wildlife', 'wild life', 'nature documentary', 'animal', 'endangered species', 'conservation', 'ecosystem', 'habitat', 'migration', 'predator', 'prey', 'species'];
   if (wildlifePhrases.some(phrase => lowerText.includes(phrase))) return true;
-  
+
   // For animal names, use word boundaries to avoid matching person names like "Patrick Wolf"
   const animalPatterns = [
-    /\bwolves?\b/, /\blions?\b/, /\btigers?\b/, /\bwhales?\b/, /\bdolphins?\b/, 
+    /\bwolves?\b/, /\blions?\b/, /\btigers?\b/, /\bwhales?\b/, /\bdolphins?\b/,
     /\belephants?\b/, /\bsharks?\b/, /\bbears?\b/, /\bgorillas?\b/, /\bpenguins?\b/,
     /\bchimpanzees?\b/, /\boctopus\b/, /\bseals?\b/, /\bjaguars?\b/, /\bpandas?\b/,
     /\brhinos?\b/, /\brhinoceros\b/, /\bpangolins?\b/, /\bleopards?\b/, /\bcheetahs?\b/,
@@ -54,7 +65,7 @@ function hasWildlifeContent(text: string): boolean {
     /\bpolar\s+bear/, /\bsnow\s+leopard/, /\bgreat\s+white/, /\bhumpback\b/,
   ];
   if (animalPatterns.some(pattern => pattern.test(lowerText))) return true;
-  
+
   // Check for nature/wildlife terms
   const natureTerms = ['ocean', 'marine', 'jungle', 'rainforest', 'safari', 'polar', 'arctic', 'coral', 'reef', 'serengeti', 'amazon', 'african savanna', 'savanna', 'savannah', 'wetlands', 'wilderness', 'biome', 'naturalist'];
   return natureTerms.some(term => lowerText.includes(term));
@@ -63,7 +74,7 @@ function hasWildlifeContent(text: string): boolean {
 // Valid regions for filtering
 const VALID_REGIONS = [
   "North America",
-  "South America", 
+  "South America",
   "Canada",
   "Africa",
   "Antarctica",
@@ -126,7 +137,7 @@ If truly uncertain, return {"regions": []}`
     const content = response.choices[0]?.message?.content || "{}";
     const parsed = JSON.parse(content);
     const regions = parsed.regions || parsed.locations || [];
-    
+
     // Filter to only valid regions
     const validRegions = regions.filter((r: string) => VALID_REGIONS.includes(r));
     console.log(`AI regions for "${title}": ${JSON.stringify(validRegions)}`);
@@ -147,7 +158,7 @@ async function getRegionsForFilm(id: string, title: string, synopsis: string): P
     console.log(`Cache hit for "${title}": ${JSON.stringify(regionCache.get(cacheKey))}`);
     return regionCache.get(cacheKey)!;
   }
-  
+
   const regions = await detectRegionsWithAI(title, synopsis);
   regionCache.set(cacheKey, regions);
   return regions;
@@ -186,12 +197,12 @@ interface TMDBWatchProviders {
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  
+
   app.get("/api/films/discover", async (req: Request, res: Response) => {
-    const apiKey = process.env.TMDB_API_KEY;
-    
+    const apiKey = tmdbApiKey;
+
     if (!apiKey) {
-      return res.status(503).json({ 
+      return res.status(503).json({
         error: "TMDB API key not configured",
         message: "Add your TMDB API key to enable automatic film discovery"
       });
@@ -199,22 +210,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
     try {
       const page = req.query.page || 1;
-      
+
       // Filter for wildlife, nature, and conservation documentaries only
       const url = `${TMDB_BASE_URL}/discover/movie?api_key=${apiKey}&with_genres=${DOCUMENTARY_GENRE_ID}&with_keywords=${WILDLIFE_KEYWORDS}&sort_by=popularity.desc&page=${page}&vote_count.gte=10`;
-      
+
       const response = await fetch(url);
       if (!response.ok) {
         throw new Error(`TMDB API error: ${response.status}`);
       }
-      
+
       const data: TMDBResponse = await response.json();
-      
+
       // Filter to ensure wildlife content using smart matching
       const filteredResults = data.results.filter(movie => {
         return hasWildlifeContent(movie.overview || "");
       });
-      
+
       // Use AI to detect regions for each film (with caching)
       const filmsWithRegions = await Promise.all(
         filteredResults.map(async (movie) => {
@@ -223,14 +234,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
             movie.title,
             movie.overview || ""
           );
-          
+
           return {
             id: `tmdb-${movie.id}`,
             tmdbId: movie.id,
             title: movie.title,
             year: movie.release_date ? parseInt(movie.release_date.split("-")[0]) : 0,
             synopsis: movie.overview,
-            posterUrl: movie.poster_path 
+            posterUrl: movie.poster_path
               ? `https://image.tmdb.org/t/p/w500${movie.poster_path}`
               : null,
             backdropUrl: movie.backdrop_path
@@ -256,10 +267,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   app.get("/api/films/search", async (req: Request, res: Response) => {
-    const apiKey = process.env.TMDB_API_KEY;
-    
+    const apiKey = tmdbApiKey;
+
     if (!apiKey) {
-      return res.status(503).json({ 
+      return res.status(503).json({
         error: "TMDB API key not configured"
       });
     }
@@ -271,14 +282,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const url = `${TMDB_BASE_URL}/search/movie?api_key=${apiKey}&query=${encodeURIComponent(query)}&include_adult=false`;
-      
+
       const response = await fetch(url);
       if (!response.ok) {
         throw new Error(`TMDB API error: ${response.status}`);
       }
-      
+
       const data: TMDBResponse = await response.json();
-      
+
       // Filter for documentaries with ACTUAL wildlife content
       // Uses smart matching to avoid false positives like person names
       const wildlifeDocumentaries = data.results.filter(movie => {
@@ -294,14 +305,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
             movie.title,
             movie.overview || ""
           );
-          
+
           return {
             id: `tmdb-${movie.id}`,
             tmdbId: movie.id,
             title: movie.title,
             year: movie.release_date ? parseInt(movie.release_date.split("-")[0]) : 0,
             synopsis: movie.overview,
-            posterUrl: movie.poster_path 
+            posterUrl: movie.poster_path
               ? `https://image.tmdb.org/t/p/w500${movie.poster_path}`
               : null,
             rating: Math.round(movie.vote_average * 10) / 10,
@@ -318,8 +329,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   app.get("/api/films/:tmdbId/watch-providers", async (req: Request, res: Response) => {
-    const apiKey = process.env.TMDB_API_KEY;
-    
+    const apiKey = tmdbApiKey;
+
     if (!apiKey) {
       return res.status(503).json({ error: "TMDB API key not configured" });
     }
@@ -327,12 +338,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { tmdbId } = req.params;
       const url = `${TMDB_BASE_URL}/movie/${tmdbId}/watch/providers?api_key=${apiKey}`;
-      
+
       const response = await fetch(url);
       if (!response.ok) {
         throw new Error(`TMDB API error: ${response.status}`);
       }
-      
+
       const data: TMDBWatchProviders = await response.json();
       const usProviders = data.results?.US;
 
@@ -341,34 +352,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const providers = [
-        ...(usProviders.flatrate || []).map(p => ({ 
-          name: p.provider_name, 
+        ...(usProviders.flatrate || []).map(p => ({
+          name: p.provider_name,
           type: "stream",
           logo: `https://image.tmdb.org/t/p/w92${p.logo_path}`
         })),
-        ...(usProviders.free || []).map(p => ({ 
-          name: p.provider_name, 
+        ...(usProviders.free || []).map(p => ({
+          name: p.provider_name,
           type: "free",
           logo: `https://image.tmdb.org/t/p/w92${p.logo_path}`
         })),
-        ...(usProviders.ads || []).map(p => ({ 
-          name: p.provider_name, 
+        ...(usProviders.ads || []).map(p => ({
+          name: p.provider_name,
           type: "free",
           logo: `https://image.tmdb.org/t/p/w92${p.logo_path}`
         })),
-        ...(usProviders.rent || []).map(p => ({ 
-          name: p.provider_name, 
+        ...(usProviders.rent || []).map(p => ({
+          name: p.provider_name,
           type: "rent",
           logo: `https://image.tmdb.org/t/p/w92${p.logo_path}`
         })),
-        ...(usProviders.buy || []).map(p => ({ 
-          name: p.provider_name, 
+        ...(usProviders.buy || []).map(p => ({
+          name: p.provider_name,
           type: "buy",
           logo: `https://image.tmdb.org/t/p/w92${p.logo_path}`
         })),
       ];
 
-      res.json({ 
+      res.json({
         providers,
         link: usProviders.link || null
       });
@@ -380,9 +391,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Get film trailers from TMDB
   app.get("/api/films/:tmdbId/videos", async (req: Request, res: Response) => {
-    const apiKey = process.env.TMDB_API_KEY;
+    const apiKey = tmdbApiKey;
     const { tmdbId } = req.params;
-    
+
     if (!apiKey) {
       return res.status(503).json({ error: "TMDB API key not configured" });
     }
@@ -390,17 +401,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const url = `${TMDB_BASE_URL}/movie/${tmdbId}/videos?api_key=${apiKey}`;
       const response = await fetch(url);
-      
+
       if (!response.ok) {
         throw new Error(`TMDB API error: ${response.status}`);
       }
-      
+
       const data = await response.json();
-      
+
       // Filter for YouTube trailers and teasers
       const videos = (data.results || [])
-        .filter((v: any) => 
-          v.site === "YouTube" && 
+        .filter((v: any) =>
+          v.site === "YouTube" &&
           (v.type === "Trailer" || v.type === "Teaser" || v.type === "Clip")
         )
         .map((v: any) => ({
@@ -411,7 +422,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           site: v.site,
         }))
         .slice(0, 5); // Limit to 5 videos
-      
+
       res.json({ videos });
     } catch (error) {
       console.error("TMDB videos error:", error);
@@ -421,10 +432,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Get top-rated wildlife documentaries for Featured section
   app.get("/api/films/featured", async (req: Request, res: Response) => {
-    const apiKey = process.env.TMDB_API_KEY;
-    
+    const apiKey = tmdbApiKey;
+
     if (!apiKey) {
-      return res.status(503).json({ 
+      return res.status(503).json({
         error: "TMDB API key not configured",
         message: "Add your TMDB API key to enable featured films"
       });
@@ -443,32 +454,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
         15162,   // polar
         167617,  // endangered species
       ].join("|");
-      
+
       // Get top-rated wildlife documentaries with high vote counts
       const url = `${TMDB_BASE_URL}/discover/movie?api_key=${apiKey}&with_genres=${DOCUMENTARY_GENRE_ID}&with_keywords=${STRICT_WILDLIFE_KEYWORDS}&sort_by=vote_average.desc&vote_count.gte=100&page=1`;
-      
+
       const response = await fetch(url);
       if (!response.ok) {
         throw new Error(`TMDB API error: ${response.status}`);
       }
-      
+
       const data: TMDBResponse = await response.json();
-      
+
       // Filter to ensure wildlife content using smart matching
       const filteredFilms = data.results.filter(movie => {
         return hasWildlifeContent(movie.overview || "");
       });
-      
+
       // Take top 6 highest-rated films
       const topFilms = filteredFilms.slice(0, 6);
-      
+
       const films = topFilms.map((movie) => ({
         id: `tmdb-${movie.id}`,
         tmdbId: movie.id,
         title: movie.title,
         year: movie.release_date ? parseInt(movie.release_date.split("-")[0]) : 0,
         synopsis: movie.overview,
-        posterUrl: movie.poster_path 
+        posterUrl: movie.poster_path
           ? `https://image.tmdb.org/t/p/w500${movie.poster_path}`
           : null,
         backdropUrl: movie.backdrop_path
@@ -488,7 +499,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Get recently released wildlife documentaries
   app.get("/api/films/new-releases", async (req: Request, res: Response) => {
-    const apiKey = process.env.TMDB_API_KEY;
+    const apiKey = tmdbApiKey;
 
     if (!apiKey) {
       return res.status(503).json({
@@ -554,7 +565,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Title and synopsis required" });
       }
 
-      const streamingText = streamingServices?.length > 0 
+      const streamingText = streamingServices?.length > 0
         ? `Available on: ${streamingServices.join(", ")}`
         : "";
 
@@ -594,8 +605,8 @@ Return ONLY the summary text, nothing else.`
 
   // Get film details by TMDB ID
   app.get("/api/films/tmdb/:tmdbId", async (req: Request, res: Response) => {
-    const apiKey = process.env.TMDB_API_KEY;
-    
+    const apiKey = tmdbApiKey;
+
     if (!apiKey) {
       return res.status(503).json({ error: "TMDB API key not configured" });
     }
@@ -603,7 +614,7 @@ Return ONLY the summary text, nothing else.`
     try {
       const { tmdbId } = req.params;
       const url = `${TMDB_BASE_URL}/movie/${tmdbId}?api_key=${apiKey}`;
-      
+
       const response = await fetch(url);
       if (!response.ok) {
         if (response.status === 404) {
@@ -611,23 +622,23 @@ Return ONLY the summary text, nothing else.`
         }
         throw new Error(`TMDB API error: ${response.status}`);
       }
-      
+
       const movie = await response.json();
-      
+
       // Use AI to detect regions
       const locations = await getRegionsForFilm(
         `tmdb-${movie.id}`,
         movie.title,
         movie.overview || ""
       );
-      
+
       const film = {
         id: `tmdb-${movie.id}`,
         tmdbId: movie.id,
         title: movie.title,
         year: movie.release_date ? parseInt(movie.release_date.split("-")[0]) : 0,
         synopsis: movie.overview,
-        posterUrl: movie.poster_path 
+        posterUrl: movie.poster_path
           ? `https://image.tmdb.org/t/p/w500${movie.poster_path}`
           : null,
         backdropUrl: movie.backdrop_path
@@ -668,9 +679,9 @@ Return ONLY the summary text, nothing else.`
   });
 
   app.get("/api/status", (_req: Request, res: Response) => {
-    res.json({ 
+    res.json({
       status: "ok",
-      tmdbConfigured: !!process.env.TMDB_API_KEY,
+      tmdbConfigured: !!tmdbApiKey,
     });
   });
 
@@ -1037,13 +1048,15 @@ Return ONLY the summary text, nothing else.`
   app.post("/api/submissions", async (req: Request, res: Response) => {
     try {
       const validatedData = insertFilmSubmissionSchema.parse(req.body);
-      
+
       const [submission] = await db.insert(filmSubmissions)
         .values(validatedData)
         .returning();
-      
+
       // Send email notification to support
-      try {
+      if (!resend) {
+        console.warn("Resend API key not configured; skipping submission emails.");
+      } else try {
         // Send notification to support team
         await resend.emails.send({
           from: "WildFilms <onboarding@resend.dev>",
@@ -1090,7 +1103,7 @@ Return ONLY the summary text, nothing else.`
           `,
         });
         console.log(`Admin notification sent for submission: ${submission.title}`);
-        
+
         // Send confirmation email to filmmaker
         await resend.emails.send({
           from: "WildFilms <onboarding@resend.dev>",
@@ -1171,7 +1184,7 @@ Return ONLY the summary text, nothing else.`
         console.error("Failed to send email notification:", emailError);
         // Don't fail the submission if email fails
       }
-      
+
       res.status(201).json({
         success: true,
         message: "Your film has been submitted successfully! We'll review it and get back to you.",
@@ -1183,7 +1196,7 @@ Return ONLY the summary text, nothing else.`
       });
     } catch (error: any) {
       console.error("Film submission error:", error);
-      
+
       if (error.name === "ZodError") {
         return res.status(400).json({
           success: false,
@@ -1191,7 +1204,7 @@ Return ONLY the summary text, nothing else.`
           details: error.errors
         });
       }
-      
+
       res.status(500).json({
         success: false,
         error: "Failed to submit film. Please try again."
@@ -1203,15 +1216,15 @@ Return ONLY the summary text, nothing else.`
   app.get("/api/submissions/:id", async (req: Request, res: Response) => {
     try {
       const { id } = req.params;
-      
+
       const [submission] = await db.select()
         .from(filmSubmissions)
         .where(eq(filmSubmissions.id, id));
-      
+
       if (!submission) {
         return res.status(404).json({ error: "Submission not found" });
       }
-      
+
       res.json({
         id: submission.id,
         title: submission.title,

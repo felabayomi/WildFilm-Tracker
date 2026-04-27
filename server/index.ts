@@ -16,15 +16,44 @@ declare module "http" {
 function setupCors(app: express.Application) {
   app.use((req, res, next) => {
     const origins = new Set<string>();
+    const addOrigin = (value: string | undefined) => {
+      if (!value) return;
+      const trimmed = value.trim();
+      if (!trimmed) return;
+
+      if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
+        origins.add(trimmed);
+        return;
+      }
+
+      origins.add(`https://${trimmed}`);
+    };
 
     if (process.env.REPLIT_DEV_DOMAIN) {
-      origins.add(`https://${process.env.REPLIT_DEV_DOMAIN}`);
+      addOrigin(process.env.REPLIT_DEV_DOMAIN);
     }
 
     if (process.env.REPLIT_DOMAINS) {
       process.env.REPLIT_DOMAINS.split(",").forEach((d) => {
-        origins.add(`https://${d.trim()}`);
+        addOrigin(d);
       });
+    }
+
+    if (process.env.CORS_ALLOWED_ORIGINS) {
+      process.env.CORS_ALLOWED_ORIGINS.split(",").forEach((origin) => {
+        const trimmed = origin.trim();
+        if (trimmed) {
+          origins.add(trimmed);
+        }
+      });
+    }
+
+    if (process.env.EXPO_PUBLIC_DOMAIN) {
+      addOrigin(process.env.EXPO_PUBLIC_DOMAIN);
+    }
+
+    if (process.env.FELIX_PUBLIC_DOMAIN) {
+      addOrigin(process.env.FELIX_PUBLIC_DOMAIN);
     }
 
     const origin = req.header("origin");
@@ -32,7 +61,9 @@ function setupCors(app: express.Application) {
     // Allow localhost origins for Expo web development (any port)
     const isLocalhost =
       origin?.startsWith("http://localhost:") ||
-      origin?.startsWith("http://127.0.0.1:");
+      origin?.startsWith("http://127.0.0.1:") ||
+      origin?.startsWith("https://localhost:") ||
+      origin?.startsWith("https://127.0.0.1:");
 
     if (origin && (origins.has(origin) || isLocalhost)) {
       res.header("Access-Control-Allow-Origin", origin);
@@ -168,7 +199,7 @@ function configureExpoAndLanding(app: express.Application) {
     "landing-page.html",
   );
   const landingPageTemplate = fs.readFileSync(templatePath, "utf-8");
-  
+
   const filmmakerPortalPath = path.resolve(
     process.cwd(),
     "server",
@@ -176,7 +207,7 @@ function configureExpoAndLanding(app: express.Application) {
     "filmmaker-portal.html",
   );
   const filmmakerPortalTemplate = fs.readFileSync(filmmakerPortalPath, "utf-8");
-  
+
   const appName = getAppName();
 
   log("Serving static Expo files with dynamic manifest routing");
@@ -189,7 +220,7 @@ function configureExpoAndLanding(app: express.Application) {
     if (req.path !== "/" && req.path !== "/manifest" && req.path !== "/submit") {
       return next();
     }
-    
+
     // Serve filmmaker portal
     if (req.path === "/submit") {
       res.setHeader("Content-Type", "text/html; charset=utf-8");

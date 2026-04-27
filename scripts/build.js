@@ -39,7 +39,20 @@ function stripProtocol(domain) {
 }
 
 function getDeploymentDomain() {
-  // Check Replit deployment environment variables first
+  // Check platform-specific deployment environment variables first
+  if (process.env.FELIX_PUBLIC_DOMAIN) {
+    return stripProtocol(process.env.FELIX_PUBLIC_DOMAIN);
+  }
+
+  if (process.env.APP_DOMAIN) {
+    return stripProtocol(process.env.APP_DOMAIN);
+  }
+
+  if (process.env.API_PUBLIC_DOMAIN) {
+    return stripProtocol(process.env.API_PUBLIC_DOMAIN);
+  }
+
+  // Replit-compatible fallbacks
   if (process.env.REPLIT_INTERNAL_APP_DOMAIN) {
     return stripProtocol(process.env.REPLIT_INTERNAL_APP_DOMAIN);
   }
@@ -53,7 +66,7 @@ function getDeploymentDomain() {
   }
 
   console.error(
-    "ERROR: No deployment domain found. Set REPLIT_INTERNAL_APP_DOMAIN, REPLIT_DEV_DOMAIN, or EXPO_PUBLIC_DOMAIN",
+    "ERROR: No deployment domain found. Set FELIX_PUBLIC_DOMAIN, APP_DOMAIN, API_PUBLIC_DOMAIN, REPLIT_INTERNAL_APP_DOMAIN, REPLIT_DEV_DOMAIN, or EXPO_PUBLIC_DOMAIN",
   );
   process.exit(1);
 }
@@ -118,7 +131,8 @@ async function startMetro(expoPublicDomain) {
     ...process.env,
     EXPO_PUBLIC_DOMAIN: expoPublicDomain,
   };
-  metroProcess = spawn("npm", ["run", "expo:start:static:build"], {
+  const npmCommand = process.platform === "win32" ? "npm.cmd" : "npm";
+  metroProcess = spawn(npmCommand, ["run", "expo:start:static:build"], {
     stdio: ["ignore", "pipe", "pipe"],
     detached: false,
     env,
@@ -516,7 +530,7 @@ async function main() {
       reject(
         new Error(
           `Overall download timeout after ${downloadTimeout / 1000} seconds. ` +
-            "Metro may be struggling to generate bundles. Check Metro logs above.",
+          "Metro may be struggling to generate bundles. Check Metro logs above.",
         ),
       );
     }, downloadTimeout);

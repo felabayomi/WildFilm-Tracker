@@ -3,8 +3,14 @@ import { Buffer } from "node:buffer";
 import { spawn } from "child_process";
 
 export const openai = new OpenAI({
-  apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
-  baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
+  apiKey:
+    process.env.WILDLIFE_TRACKER_AI_INTEGRATIONS_OPENAI_API_KEY ||
+    process.env.OPENAI_API_KEY ||
+    process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
+  baseURL:
+    process.env.WILDLIFE_TRACKER_AI_INTEGRATIONS_OPENAI_BASE_URL ||
+    process.env.OPENAI_BASE_URL ||
+    process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
 });
 
 /**
@@ -32,7 +38,7 @@ export function convertWebmToWav(webmBuffer: Buffer): Promise<Buffer> {
     const chunks: Buffer[] = [];
 
     ffmpeg.stdout.on("data", (chunk) => chunks.push(chunk));
-    ffmpeg.stderr.on("data", () => {}); // Suppress ffmpeg logs
+    ffmpeg.stderr.on("data", () => { }); // Suppress ffmpeg logs
     ffmpeg.on("close", (code) => {
       if (code === 0) {
         resolve(Buffer.concat(chunks));
